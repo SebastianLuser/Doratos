@@ -21,6 +21,7 @@ public class LobbyUI : MonoBehaviour
 
     [Header("Room Creation")]
     [SerializeField] private TMP_InputField roomNameInput;
+    [SerializeField] private TMP_InputField killLimitInput;
     [SerializeField] private Button createRoomButton;
 
     [Header("Room List")]
@@ -58,6 +59,7 @@ public class LobbyUI : MonoBehaviour
             NetworkManager.Instance.OnRoomListChanged -= HandleRoomListChanged;
             NetworkManager.Instance.OnError -= HandleError;
             NetworkManager.Instance.OnRoomPlayersChanged -= HandleRoomPlayersChanged;
+            NetworkManager.Instance.OnSeriesUpdated -= HandleSeriesUpdated;
         }
     }
 
@@ -87,6 +89,7 @@ public class LobbyUI : MonoBehaviour
             NetworkManager.Instance.OnRoomListChanged += HandleRoomListChanged;
             NetworkManager.Instance.OnError += HandleError;
             NetworkManager.Instance.OnRoomPlayersChanged += HandleRoomPlayersChanged;
+            NetworkManager.Instance.OnSeriesUpdated += HandleSeriesUpdated;
 
             if (NetworkManager.Instance.State != ConnectionState.Idle)
                 HandleStateChanged(NetworkManager.Instance.State);
@@ -122,10 +125,13 @@ public class LobbyUI : MonoBehaviour
         if (roomNameInput == null) return;
         string roomName = roomNameInput.text.Trim();
         if (string.IsNullOrEmpty(roomName))
-        {
             roomName = PhotonNetwork.NickName + "_Arena";
-        }
-        NetworkManager.Instance.CreateRoom(roomName);
+
+        int killLimit = 0;
+        if (killLimitInput != null && !string.IsNullOrEmpty(killLimitInput.text))
+            int.TryParse(killLimitInput.text, out killLimit);
+
+        NetworkManager.Instance.CreateRoom(roomName, killLimit);
     }
 
     private void OnLeaveRoomClicked()
@@ -230,6 +236,12 @@ public class LobbyUI : MonoBehaviour
         }
     }
 
+    private void HandleSeriesUpdated()
+    {
+        if (NetworkManager.Instance != null && NetworkManager.Instance.State == ConnectionState.WaitingOpponent)
+            UpdateRoomInfo();
+    }
+
     private void UpdateStartButton()
     {
         if (startButton == null) return;
@@ -247,11 +259,19 @@ public class LobbyUI : MonoBehaviour
         if (roomInfoText == null || !PhotonNetwork.InRoom) return;
 
         var room = PhotonNetwork.CurrentRoom;
+        int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
+        string seriesInfo = killLimit > 0 ? $"  (Serie: primero en {killLimit} kills)" : "";
+
         string players = "";
         foreach (var p in PhotonNetwork.PlayerList)
-            players += $"\n  - {p.NickName}";
+        {
+            int sk = NetworkManager.Instance != null ? NetworkManager.Instance.GetSeriesKills(p) : 0;
+            string hostTag = p.IsMasterClient ? " [Host]" : "";
+            string killTag = killLimit > 0 ? $" — {sk}/{killLimit}" : "";
+            players += $"\n  - {p.NickName}{hostTag}{killTag}";
+        }
 
-        roomInfoText.text = $"Sala: {room.Name}\nGladiadores ({room.PlayerCount}/{room.MaxPlayers}):{players}";
+        roomInfoText.text = $"Sala: {room.Name}{seriesInfo}\nGladiadores ({room.PlayerCount}/{room.MaxPlayers}):{players}";
     }
 
     private void ShowIdle()

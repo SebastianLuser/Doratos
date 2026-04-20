@@ -22,6 +22,10 @@ public class HUD : MonoBehaviour
     [Header("Timer")]
     [SerializeField] private TextMeshProUGUI timerText;
 
+    [Header("Series Standings (TAB)")]
+    [SerializeField] private GameObject seriesPanel;
+    [SerializeField] private TextMeshProUGUI seriesText;
+
     private PlayerHealth localHealth;
     private PlayerState localState;
     private List<PlayerHealth> allHealths = new List<PlayerHealth>();
@@ -66,6 +70,29 @@ public class HUD : MonoBehaviour
         UpdateHealthBars();
         UpdateSpearState();
         UpdateFeedback();
+
+        if (Input.GetKeyDown(KeyCode.Tab) && seriesPanel != null)
+        {
+            bool show = !seriesPanel.activeSelf;
+            seriesPanel.SetActive(show);
+            if (show) RefreshSeriesStandings();
+        }
+    }
+
+    private void RefreshSeriesStandings()
+    {
+        if (seriesText == null || !PhotonNetwork.InRoom) return;
+
+        int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
+        string header = killLimit > 0 ? $"Serie — primero en {killLimit} kills\n" : "Serie\n";
+        string lines = "";
+        foreach (var p in PhotonNetwork.PlayerList)
+        {
+            int sk = NetworkManager.Instance != null ? NetworkManager.Instance.GetSeriesKills(p) : 0;
+            string you = p.IsLocal ? " (vos)" : "";
+            lines += $"\n{p.NickName}{you}:  {sk}" + (killLimit > 0 ? $"/{killLimit}" : "");
+        }
+        seriesText.text = header + lines;
     }
 
     public void RegisterLocalPlayer(PlayerHealth health, PlayerState state)

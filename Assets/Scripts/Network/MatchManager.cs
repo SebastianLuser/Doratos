@@ -22,6 +22,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
     private float fireDamageTimer;
 
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
+    private GameObject localPlayerGO;
+    private GameObject spearGO;
 
     private void Awake()
     {
@@ -31,12 +33,16 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        Debug.Log($"[MatchManager] Start — InRoom={PhotonNetwork.InRoom}, IsMaster={PhotonNetwork.IsMasterClient}");
         if (!PhotonNetwork.InRoom) return;
 
         IsInMatch = true;
         matchStartTime = Time.time;
 
-        SceneManager.LoadScene("HUD", LoadSceneMode.Additive);
+        bool hudAlreadyLoaded = UnityEngine.SceneManagement.SceneManager.GetSceneByName("HUD").isLoaded;
+        Debug.Log($"[MatchManager] HUD ya cargado={hudAlreadyLoaded}");
+        if (!hudAlreadyLoaded)
+            SceneManager.LoadScene("HUD", LoadSceneMode.Additive);
 
         SpawnLocalPlayer();
 
@@ -101,11 +107,13 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private void SpawnLocalPlayer()
     {
+        Debug.Log($"[MatchManager] SpawnLocalPlayer actor={PhotonNetwork.LocalPlayer.ActorNumber}");
         int index = GetSpawnIndex(PhotonNetwork.LocalPlayer.ActorNumber);
         Vector3 spawnPos = arenaSO.spawnPoints[index];
         Vector3 center = Vector3.zero;
         Quaternion spawnRot = Quaternion.LookRotation(center - spawnPos);
-        var playerGO = PhotonNetwork.Instantiate("Prefabs/Gladiator", spawnPos, spawnRot);
+        localPlayerGO = PhotonNetwork.Instantiate("Prefabs/Gladiator", spawnPos, spawnRot);
+        var playerGO = localPlayerGO;
         totalPlayers = PhotonNetwork.OfflineMode ? 4 : PhotonNetwork.CurrentRoom.PlayerCount;
 
         var health = playerGO.GetComponent<PlayerHealth>();
@@ -139,9 +147,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         var dummyPrefab = dummyGladiatorPrefab;
         if (dummyPrefab == null)
-        {
             dummyPrefab = Resources.Load<GameObject>("Prefabs/Gladiator");
-        }
 
         if (dummyPrefab == null)
         {
@@ -157,10 +163,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
             var spearSocket = dummy.transform.Find("SpearSocket");
             if (spearSocket != null)
-            {
                 foreach (Transform child in spearSocket)
                     Destroy(child.gameObject);
-            }
 
             var aimIndicator = dummy.transform.Find("AimIndicator");
             if (aimIndicator != null)
@@ -199,7 +203,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private void SpawnSpear()
     {
-        var spearGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
+        spearGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
         var spear = spearGO.GetComponent<Spear>();
 
         if (HUD.Instance != null && spear != null)
@@ -228,10 +232,10 @@ public class MatchManager : MonoBehaviourPunCallbacks
                 IsInMatch = false;
                 bool isWinner = !deadActors.Contains(PhotonNetwork.LocalPlayer.ActorNumber);
                 if (isWinner && EndScreenUI.Instance != null)
-                    EndScreenUI.Instance.ShowVictory();
+                    EndScreenUI.Instance.ShowRoundVictory(1, 0);
                 else if (EndScreenUI.Instance != null)
-                    EndScreenUI.Instance.ShowDefeat();
-                StartCoroutine(ReturnToLobbyAfterDelay());
+                    EndScreenUI.Instance.ShowRoundDefeat(1, 0);
+                StartCoroutine(ReturnToRoomAfterDelay());
             }
             return;
         }
@@ -263,7 +267,17 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         if (alivePlayers <= 1 && PhotonNetwork.IsMasterClient)
         {
-            photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All, lastAliveActor, "LastManStanding");
+            int newKills = 0;
+            bool seriesOver = false;
+
+            if (lastAliveActor >= 0)
+            {
+                NetworkManager.Instance.AddSeriesKill(lastAliveActor, out newKills);
+                int killLimit = NetworkManager.Instance.KillLimit;
+                seriesOver = killLimit > 0 && newKills >= killLimit;
+            }
+
+            photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All, lastAliveActor, "LastManStanding", seriesOver, newKills);
         }
     }
 
@@ -276,41 +290,94 @@ public class MatchManager : MonoBehaviourPunCallbacks
             HUD.Instance.ShowFeedback("Un gladiador abandonó la arena");
 
         int localActor = PhotonNetwork.LocalPlayer.ActorNumber;
-        RPC_EndMatch(localActor, "Disconnect");
+        RPC_EndMatch(localActor, "Disconnect", false, 0);
     }
 
     [PunRPC]
-    private void RPC_EndMatch(int winnerActorNr, string reason)
+    private void RPC_EndMatch(int winnerActorNr, string reason, bool seriesOver, int winnerNewKills)
     {
+        Debug.Log($"[MatchManager] RPC_EndMatch — winner={winnerActorNr}, reason={reason}, seriesOver={seriesOver}, local={PhotonNetwork.LocalPlayer.ActorNumber}");
         IsInMatch = false;
         bool isWinner = PhotonNetwork.LocalPlayer.ActorNumber == winnerActorNr;
+
+        int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
 
         if (EndScreenUI.Instance != null)
         {
             if (reason == "Disconnect")
                 EndScreenUI.Instance.ShowDisconnectWin();
+            else if (seriesOver && isWinner)
+                EndScreenUI.Instance.ShowSeriesVictory();
+            else if (seriesOver && !isWinner)
+                EndScreenUI.Instance.ShowSeriesDefeat();
             else if (isWinner)
-                EndScreenUI.Instance.ShowVictory();
+                EndScreenUI.Instance.ShowRoundVictory(winnerNewKills, killLimit);
             else
-                EndScreenUI.Instance.ShowDefeat();
+                EndScreenUI.Instance.ShowRoundDefeat(winnerNewKills, killLimit);
         }
 
         if (LobbyUI.Instance != null)
         {
-            if (isWinner)
-                LobbyUI.Instance.AddKill();
-            else
-                LobbyUI.Instance.AddDeath();
+            if (isWinner) LobbyUI.Instance.AddKill();
+            else LobbyUI.Instance.AddDeath();
         }
 
-        StartCoroutine(ReturnToLobbyAfterDelay());
+        if (seriesOver)
+            StartCoroutine(ReturnToRoomAfterDelay());
+        else
+            StartCoroutine(StartNextRoundAfterDelay());
     }
 
-    private IEnumerator ReturnToLobbyAfterDelay()
+    private IEnumerator StartNextRoundAfterDelay()
     {
         float delay = matchConfig != null ? matchConfig.endScreenDelaySec : 3f;
         yield return new WaitForSeconds(delay);
-        ReturnToLobby();
+
+        // Solo el master dispara el reload — la RPC lo ejecuta en TODOS los clientes
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC(nameof(RPC_LoadNextRound), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_LoadNextRound()
+    {
+        StartCoroutine(DestroyThenReload());
+    }
+
+    private IEnumerator DestroyThenReload()
+    {
+        if (localPlayerGO != null)
+        {
+            PhotonNetwork.Destroy(localPlayerGO);
+            localPlayerGO = null;
+        }
+        if (PhotonNetwork.IsMasterClient && spearGO != null)
+        {
+            PhotonNetwork.Destroy(spearGO);
+            spearGO = null;
+        }
+        yield return new WaitForSeconds(0.3f);
+        SceneManager.LoadScene("Arena");
+    }
+
+    private IEnumerator ReturnToRoomAfterDelay()
+    {
+        float delay = matchConfig != null ? matchConfig.endScreenDelaySec : 3f;
+        yield return new WaitForSeconds(delay);
+
+        if (localPlayerGO != null)
+        {
+            PhotonNetwork.Destroy(localPlayerGO);
+            localPlayerGO = null;
+        }
+
+        if (PhotonNetwork.IsMasterClient && spearGO != null)
+        {
+            PhotonNetwork.Destroy(spearGO);
+            spearGO = null;
+        }
+
+        NetworkManager.Instance.ReturnToRoom();
     }
 
     public void ReturnToLobby()

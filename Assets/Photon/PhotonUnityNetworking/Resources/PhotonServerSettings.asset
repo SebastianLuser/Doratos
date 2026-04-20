@@ -52,6 +52,7 @@ MonoBehaviour:
   - RPC_Throw
   - RPC_PlayerDied
   - RPC_StartFireRing
+  - RPC_LoadNextRound
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

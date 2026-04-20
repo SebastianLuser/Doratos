@@ -8,6 +8,7 @@ public class EndScreenUI : MonoBehaviour
 
     [SerializeField] private CanvasGroup panel;
     [SerializeField] private TextMeshProUGUI resultText;
+    [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private Button lobbyButton;
 
     private void Awake()
@@ -29,29 +30,50 @@ public class EndScreenUI : MonoBehaviour
             lobbyButton.onClick.RemoveListener(OnLobbyClicked);
     }
 
-    public void ShowVictory()
+    // Mid-series round win — no lobby button, shows progress
+    public void ShowRoundVictory(int wins, int killLimit)
     {
-        ShowResult("¡Victoria!");
+        string sub = killLimit > 0 ? $"{wins}/{killLimit} victorias" : $"{wins} victorias";
+        ShowResult("¡Ronda ganada!", sub, showButton: false);
     }
 
-    public void ShowDefeat()
+    // Mid-series round loss — no lobby button
+    public void ShowRoundDefeat(int wins, int killLimit)
     {
-        ShowResult("Derrota");
+        string sub = killLimit > 0 ? $"Líder: {wins}/{killLimit}" : "";
+        ShowResult("Ronda perdida", sub, showButton: false);
+    }
+
+    // Series over
+    public void ShowSeriesVictory()
+    {
+        ShowResult("¡Ganaste la serie!", "", showButton: true);
+    }
+
+    public void ShowSeriesDefeat()
+    {
+        ShowResult("Perdiste la serie", "", showButton: true);
     }
 
     public void ShowDisconnectWin()
     {
-        ShowResult("Tu oponente se desconectó\n¡Victoria!");
+        ShowResult("Oponente desconectado\n¡Victoria!", "", showButton: false);
     }
 
     public void ShowConnectionLost()
     {
-        ShowResult("Perdiste la conexión");
+        ShowResult("Perdiste la conexión", "", showButton: true);
     }
 
-    private void ShowResult(string text)
+    private void ShowResult(string title, string subtitle, bool showButton)
     {
-        if (resultText != null) resultText.text = text;
+        if (resultText != null) resultText.text = title;
+        if (subtitleText != null)
+        {
+            subtitleText.text = subtitle;
+            subtitleText.gameObject.SetActive(!string.IsNullOrEmpty(subtitle));
+        }
+        if (lobbyButton != null) lobbyButton.gameObject.SetActive(showButton);
         ShowPanel();
     }
 

@@ -91,10 +91,9 @@ public class Spear : MonoBehaviourPun, IPunObservable
             if (hitActorNr == HolderActorNr) return;
 
             var shield = other.GetComponentInChildren<Shield>();
-            var sync = other.GetComponent<PlayerNetworkSync>();
-            bool isShielding = sync != null && sync.NetworkIsShielding;
+            bool isShielding = shield != null && shield.IsActive;
 
-            if (isShielding && shield != null && shield.IsBlocking(rb.velocity.normalized))
+            if (isShielding && shield.IsBlocking(rb.velocity.normalized))
             {
                 photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
             }
