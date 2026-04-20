@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Photon.Pun;
@@ -30,6 +31,7 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private GameObject roomPanel;
     [SerializeField] private TextMeshProUGUI roomInfoText;
     [SerializeField] private Button leaveRoomButton;
+    [SerializeField] private Button startButton;
 
     [Header("Stats")]
     [SerializeField] private GameObject statsPanel;
@@ -37,6 +39,7 @@ public class LobbyUI : MonoBehaviour
 
     private int totalKills;
     private int totalDeaths;
+    private Coroutine refreshCoroutine;
 
     private void Awake()
     {
@@ -45,17 +48,6 @@ public class LobbyUI : MonoBehaviour
 
         totalKills = PlayerPrefs.GetInt("Stats_Kills", 0);
         totalDeaths = PlayerPrefs.GetInt("Stats_Deaths", 0);
-    }
-
-    private void OnEnable()
-    {
-        if (NetworkManager.Instance != null)
-        {
-            NetworkManager.Instance.OnStateChanged += HandleStateChanged;
-            NetworkManager.Instance.OnRoomListChanged += HandleRoomListChanged;
-            NetworkManager.Instance.OnError += HandleError;
-            NetworkManager.Instance.OnRoomPlayersChanged += HandleRoomPlayersChanged;
-        }
     }
 
     private void OnDisable()
@@ -80,6 +72,8 @@ public class LobbyUI : MonoBehaviour
             createRoomButton.onClick.AddListener(OnCreateRoomClicked);
         if (leaveRoomButton != null)
             leaveRoomButton.onClick.AddListener(OnLeaveRoomClicked);
+        if (startButton != null)
+            startButton.onClick.AddListener(OnStartClicked);
 
         if (nicknameInput != null)
         {
@@ -87,10 +81,22 @@ public class LobbyUI : MonoBehaviour
             nicknameInput.text = saved;
         }
 
-        if (NetworkManager.Instance != null && NetworkManager.Instance.State != ConnectionState.Idle)
-            HandleStateChanged(NetworkManager.Instance.State);
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnStateChanged += HandleStateChanged;
+            NetworkManager.Instance.OnRoomListChanged += HandleRoomListChanged;
+            NetworkManager.Instance.OnError += HandleError;
+            NetworkManager.Instance.OnRoomPlayersChanged += HandleRoomPlayersChanged;
+
+            if (NetworkManager.Instance.State != ConnectionState.Idle)
+                HandleStateChanged(NetworkManager.Instance.State);
+            else
+                ShowIdle();
+        }
         else
+        {
             ShowIdle();
+        }
     }
 
     private void Update()
@@ -127,6 +133,11 @@ public class LobbyUI : MonoBehaviour
         PhotonNetwork.LeaveRoom();
     }
 
+    private void OnStartClicked()
+    {
+        NetworkManager.Instance.StartMatch();
+    }
+
     private void ApplyNickname()
     {
         if (nicknameInput == null) return;
@@ -152,6 +163,9 @@ public class LobbyUI : MonoBehaviour
                 SetStatus("En el lobby — Creá o elegí una sala");
                 ShowLobbyUI(true);
                 ShowRoomUI(false);
+                HandleRoomListChanged(NetworkManager.Instance.GetCachedRoomList());
+                if (refreshCoroutine != null) StopCoroutine(refreshCoroutine);
+                refreshCoroutine = StartCoroutine(AutoRefreshRoomList());
                 break;
             case ConnectionState.CreatingRoom:
                 SetStatus("Creando sala...");
@@ -161,6 +175,7 @@ public class LobbyUI : MonoBehaviour
                 ShowRoomUI(true);
                 ShowLobbyUI(false);
                 UpdateRoomInfo();
+                UpdateStartButton();
                 break;
             case ConnectionState.StartingMatch:
                 SetStatus("¡Arena completa! Cargando...");
@@ -174,6 +189,7 @@ public class LobbyUI : MonoBehaviour
                 ShowLobbyUI(false);
                 ShowRoomUI(false);
                 if (retryButton != null) retryButton.gameObject.SetActive(true);
+                if (refreshCoroutine != null) { StopCoroutine(refreshCoroutine); refreshCoroutine = null; }
                 break;
         }
     }
@@ -208,7 +224,17 @@ public class LobbyUI : MonoBehaviour
     private void HandleRoomPlayersChanged()
     {
         if (NetworkManager.Instance != null && NetworkManager.Instance.State == ConnectionState.WaitingOpponent)
+        {
             UpdateRoomInfo();
+            UpdateStartButton();
+        }
+    }
+
+    private void UpdateStartButton()
+    {
+        if (startButton == null) return;
+        bool canStart = PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.PlayerCount >= 2;
+        startButton.gameObject.SetActive(canStart);
     }
 
     private void HandleError(string message)
@@ -248,7 +274,14 @@ public class LobbyUI : MonoBehaviour
     {
         if (roomNameInput != null) roomNameInput.gameObject.SetActive(show);
         if (createRoomButton != null) createRoomButton.gameObject.SetActive(show);
-        if (roomListContent != null) roomListContent.gameObject.SetActive(show);
+        if (roomListContent != null)
+        {
+            var scroll = roomListContent.GetComponentInParent<UnityEngine.UI.ScrollRect>();
+            if (scroll != null)
+                scroll.gameObject.SetActive(show);
+            else
+                roomListContent.gameObject.SetActive(show);
+        }
     }
 
     private void ShowRoomUI(bool show)
@@ -280,5 +313,15 @@ public class LobbyUI : MonoBehaviour
     {
         if (statsText != null)
             statsText.text = $"Kills: {totalKills}\nDeaths: {totalDeaths}";
+    }
+
+    private IEnumerator AutoRefreshRoomList()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(5f);
+            if (NetworkManager.Instance != null && NetworkManager.Instance.State == ConnectionState.InLobby)
+                HandleRoomListChanged(NetworkManager.Instance.GetCachedRoomList());
+        }
     }
 }

@@ -27,6 +27,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private List<RoomInfo> cachedRoomList = new List<RoomInfo>();
 
+    public List<RoomInfo> GetCachedRoomList() => new List<RoomInfo>(cachedRoomList);
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -65,6 +67,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         SetState(ConnectionState.CreatingRoom);
         var options = new RoomOptions { MaxPlayers = 4, IsVisible = true, IsOpen = true };
         PhotonNetwork.CreateRoom(roomName, options);
+    }
+
+    public void StartMatch()
+    {
+        if (!PhotonNetwork.IsMasterClient || PhotonNetwork.CurrentRoom.PlayerCount < 2) return;
+        SetState(ConnectionState.StartingMatch);
+        PhotonNetwork.CurrentRoom.IsOpen = false;
+        PhotonNetwork.CurrentRoom.IsVisible = false;
+        if (PhotonNetwork.IsMasterClient)
+            PhotonNetwork.LoadLevel("Arena");
     }
 
     public void JoinRoom(string roomName)

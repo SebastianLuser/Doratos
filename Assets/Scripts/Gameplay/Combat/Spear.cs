@@ -94,7 +94,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
             var sync = other.GetComponent<PlayerNetworkSync>();
             bool isShielding = sync != null && sync.NetworkIsShielding;
 
-            if (isShielding && shield != null && shield.IsBlocking(rb.linearVelocity.normalized))
+            if (isShielding && shield != null && shield.IsBlocking(rb.velocity.normalized))
             {
                 photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
             }
@@ -124,7 +124,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
         transform.rotation = Quaternion.LookRotation(direction);
 
         rb.isKinematic = false;
-        rb.linearVelocity = direction.normalized * speed;
+        rb.velocity = direction.normalized * speed;
         col.isTrigger = true;
 
         throwOrigin = origin;
@@ -141,7 +141,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
 
         if (!rb.isKinematic)
         {
-            rb.linearVelocity = Vector3.zero;
+            rb.velocity = Vector3.zero;
             rb.isKinematic = true;
         }
         col.isTrigger = true;
@@ -155,7 +155,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
 
         if (!rb.isKinematic)
         {
-            rb.linearVelocity = Vector3.zero;
+            rb.velocity = Vector3.zero;
             rb.isKinematic = true;
         }
 

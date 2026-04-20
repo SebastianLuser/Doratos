@@ -8,7 +8,7 @@ public class TempHUDSetup
     [MenuItem("Tools/Setup HUD Health Bars")]
     public static void SetupHUD()
     {
-        var hud = Object.FindAnyObjectByType<HUD>();
+        var hud = Object.FindObjectOfType<HUD>();
         if (hud == null)
         {
             Debug.LogError("No se encontró componente HUD en la escena.");

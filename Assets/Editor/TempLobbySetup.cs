@@ -201,7 +201,7 @@ public class TempLobbySetup
         if (lobbyComp == null)
         {
             // Search all objects
-            lobbyComp = Object.FindAnyObjectByType<LobbyUI>();
+            lobbyComp = Object.FindObjectOfType<LobbyUI>();
         }
 
         if (lobbyComp != null)
