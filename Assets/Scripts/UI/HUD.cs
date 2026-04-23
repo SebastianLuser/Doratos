@@ -205,11 +205,7 @@ public class HUD : MonoBehaviour
         {
             var renderer = body.GetComponent<Renderer>();
             if (renderer != null)
-            {
-                var mat = new Material(renderer.material);
-                mat.color = color;
-                renderer.material = mat;
-            }
+                renderer.material.color = color;
         }
     }
 }

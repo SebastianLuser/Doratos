@@ -15,7 +15,8 @@ public class PlayerController : MonoBehaviourPun
     private bool isCharging;
     private float chargeTimer;
 
-    public float ChargeNormalized => currentSpear != null ? Mathf.Clamp01(chargeTimer / currentSpear.SpearData.chargeMaxSec) : 0f;
+    public float ChargeNormalized => currentSpear != null && currentSpear.SpearData.chargeMaxSec > 0f
+        ? Mathf.Clamp01(chargeTimer / currentSpear.SpearData.chargeMaxSec) : 0f;
     public bool IsCharging => isCharging;
 
     private void Awake()
@@ -88,7 +89,7 @@ public class PlayerController : MonoBehaviourPun
         if (currentSpear.HolderActorNr != photonView.OwnerActorNr) return;
 
         var data = currentSpear.SpearData;
-        float t = Mathf.Clamp01(chargeTimer / data.chargeMaxSec);
+        float t = data.chargeMaxSec > 0f ? Mathf.Clamp01(chargeTimer / data.chargeMaxSec) : 1f;
         float speed = Mathf.Lerp(data.minThrowSpeed, data.maxThrowSpeed, t);
 
         Vector3 origin = transform.position + Vector3.up * 0.8f + transform.forward * 1f;

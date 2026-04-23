@@ -67,6 +67,11 @@ public class Spear : MonoBehaviourPun, IPunObservable
         playersByActorNr.Remove(actorNr);
     }
 
+    public static void ClearPlayers()
+    {
+        playersByActorNr.Clear();
+    }
+
     private void Update()
     {
         if (!PhotonNetwork.IsMasterClient) return;

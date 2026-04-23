@@ -30,18 +30,22 @@ public class MatchManager : MonoBehaviourPunCallbacks
         Instance = this;
     }
 
-    private void Start()
+    private IEnumerator Start()
     {
         Debug.Log($"[MatchManager] Start — InRoom={PhotonNetwork.InRoom}, IsMaster={PhotonNetwork.IsMasterClient}");
-        if (!PhotonNetwork.InRoom) return;
+        if (!PhotonNetwork.InRoom) yield break;
 
         IsInMatch = true;
         matchStartTime = Time.time;
+        Spear.ClearPlayers();
 
-        bool hudAlreadyLoaded = UnityEngine.SceneManagement.SceneManager.GetSceneByName("HUD").isLoaded;
+        bool hudAlreadyLoaded = SceneManager.GetSceneByName("HUD").isLoaded;
         Debug.Log($"[MatchManager] HUD ya cargado={hudAlreadyLoaded}");
         if (!hudAlreadyLoaded)
             SceneManager.LoadScene("HUD", LoadSceneMode.Additive);
+
+        while (HUD.Instance == null)
+            yield return null;
 
         SpawnLocalPlayer();
 
@@ -153,6 +157,15 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         if (HUD.Instance != null)
             HUD.Instance.RegisterEnemy(health);
+        else
+            StartCoroutine(RegisterEnemyWhenHUDReady(health));
+    }
+
+    private IEnumerator RegisterEnemyWhenHUDReady(PlayerHealth health)
+    {
+        while (HUD.Instance == null)
+            yield return null;
+        HUD.Instance.RegisterEnemy(health);
     }
 
     public void NotifyPlayerDied(int deadActorNr)
