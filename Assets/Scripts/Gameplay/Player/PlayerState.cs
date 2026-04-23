@@ -24,12 +24,14 @@ public class PlayerState : MonoBehaviourPun
     private Vector3 dashDirection;
 
     private Shield shield;
+    private BlockReceiver blockReceiver;
 
     public Vector3 DashDirection => dashDirection;
 
     private void Awake()
     {
         shield = GetComponentInChildren<Shield>();
+        blockReceiver = GetComponent<BlockReceiver>();
     }
 
     private void Update()
@@ -61,7 +63,7 @@ public class PlayerState : MonoBehaviourPun
                 if (!Input.GetMouseButton(1) || shieldActiveTimer <= 0f)
                 {
                     shieldCooldownTimer = stats.shieldCooldown;
-                    ExitToDefault();
+                    ExitShield();
                 }
                 break;
 
@@ -81,6 +83,18 @@ public class PlayerState : MonoBehaviourPun
         CurrentState = PlayerStateId.Shielding;
         shieldActiveTimer = stats.shieldMaxDuration;
         if (shield != null) shield.Activate();
+
+        // Broadcast con el ServerTimestamp del momento exacto de activación.
+        // BlockReceiver.CanBlock() usará este timestamp para validar bloqueos.
+        photonView.RPC(nameof(BlockReceiver.RPC_BlockActivated), RpcTarget.All,
+                       PhotonNetwork.ServerTimestamp);
+    }
+
+    // Salida específica del estado Shielding: notifica a BlockReceiver antes de resetear.
+    private void ExitShield()
+    {
+        photonView.RPC(nameof(BlockReceiver.RPC_BlockDeactivated), RpcTarget.All);
+        ExitToDefault();
     }
 
     private void EnterDashing()
@@ -99,6 +113,9 @@ public class PlayerState : MonoBehaviourPun
 
     public void ResetToDefault()
     {
+        // Si el jugador muere mientras bloquea, notificar a BlockReceiver
+        if (CurrentState == PlayerStateId.Shielding)
+            photonView.RPC(nameof(BlockReceiver.RPC_BlockDeactivated), RpcTarget.All);
         ExitToDefault();
     }
 

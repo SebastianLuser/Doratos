@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 4415571618855964473}
   - component: {fileID: 8759759943226532970}
   - component: {fileID: 5972156356194733298}
+  - component: {fileID: 8870588304123356173}
   m_Layer: 0
   m_Name: Gladiator
   m_TagString: Untagged
@@ -279,7 +280,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef2c4d95e6e55a04ca5d53a3d2f68ecb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerNetworkSync
-  lerpSpeed: 10
 --- !u!114 &5972156356194733298
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -293,6 +293,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shield
   shieldVisual: {fileID: 9114391553575125296}
+--- !u!114 &8870588304123356173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2144342664343839659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c50d15adda2177342b3ca40ad61e47cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toleranceMs: 200
 --- !u!1 &9114391553575125296
 GameObject:
   m_ObjectHideFlags: 0
