@@ -10,7 +10,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     [SerializeField] private MatchConfigSO matchConfig;
     [SerializeField] private ArenaSO arenaSO;
-    [SerializeField] private GameObject dummyGladiatorPrefab;
     [SerializeField] private FireRing fireRing;
 
     public bool IsInMatch { get; private set; }
@@ -48,9 +47,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
             SpawnSpear();
-
-        if (PhotonNetwork.OfflineMode)
-            StartCoroutine(SpawnDummies());
     }
 
     private void Update()
@@ -114,7 +110,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
         Quaternion spawnRot = Quaternion.LookRotation(center - spawnPos);
         localPlayerGO = PhotonNetwork.Instantiate("Prefabs/Gladiator", spawnPos, spawnRot);
         var playerGO = localPlayerGO;
-        totalPlayers = PhotonNetwork.OfflineMode ? 4 : PhotonNetwork.CurrentRoom.PlayerCount;
+        totalPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
 
         var health = playerGO.GetComponent<PlayerHealth>();
         var state = playerGO.GetComponent<PlayerState>();
@@ -141,66 +137,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
         return Mathf.Clamp(index, 0, arenaSO.spawnPoints.Length - 1);
     }
 
-    private IEnumerator SpawnDummies()
-    {
-        yield return new WaitForSeconds(0.2f);
-
-        var dummyPrefab = dummyGladiatorPrefab;
-        if (dummyPrefab == null)
-            dummyPrefab = Resources.Load<GameObject>("Prefabs/Gladiator");
-
-        if (dummyPrefab == null)
-        {
-            Debug.LogError("No se encontró prefab para dummies");
-            yield break;
-        }
-
-        for (int i = 1; i < 4; i++)
-        {
-            Vector3 pos = arenaSO.spawnPoints[i];
-            Quaternion rot = Quaternion.LookRotation(Vector3.zero - pos);
-            var dummy = Instantiate(dummyPrefab, pos, rot);
-
-            var spearSocket = dummy.transform.Find("SpearSocket");
-            if (spearSocket != null)
-                foreach (Transform child in spearSocket)
-                    Destroy(child.gameObject);
-
-            var aimIndicator = dummy.transform.Find("AimIndicator");
-            if (aimIndicator != null)
-            {
-                var r = aimIndicator.GetComponent<Renderer>();
-                if (r != null) r.enabled = false;
-            }
-
-            var controller = dummy.GetComponent<PlayerController>();
-            if (controller != null) controller.enabled = false;
-
-            var state = dummy.GetComponent<PlayerState>();
-            if (state != null) state.enabled = false;
-
-            var netSync = dummy.GetComponent<PlayerNetworkSync>();
-            if (netSync != null) netSync.enabled = false;
-
-            var photonView = dummy.GetComponent<PhotonView>();
-            if (photonView != null) Destroy(photonView);
-
-            var transformView = dummy.GetComponent<PhotonTransformView>();
-            if (transformView != null) Destroy(transformView);
-
-            var playerHealth = dummy.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                var dh = dummy.AddComponent<DummyHealth>();
-                dh.Init(playerHealth.MaxHealth, 1000 + i);
-                Destroy(playerHealth);
-
-                if (HUD.Instance != null)
-                    HUD.Instance.RegisterDummy(dh);
-            }
-        }
-    }
-
     private void SpawnSpear()
     {
         spearGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
@@ -222,23 +158,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
     public void NotifyPlayerDied(int deadActorNr)
     {
         if (!IsInMatch) return;
-
-        if (PhotonNetwork.OfflineMode)
-        {
-            deadActors.Add(deadActorNr);
-            int alive = totalPlayers - deadActors.Count;
-            if (alive <= 1)
-            {
-                IsInMatch = false;
-                bool isWinner = !deadActors.Contains(PhotonNetwork.LocalPlayer.ActorNumber);
-                if (isWinner && EndScreenUI.Instance != null)
-                    EndScreenUI.Instance.ShowRoundVictory(1, 0);
-                else if (EndScreenUI.Instance != null)
-                    EndScreenUI.Instance.ShowRoundDefeat(1, 0);
-                StartCoroutine(ReturnToRoomAfterDelay());
-            }
-            return;
-        }
 
         if (!PhotonNetwork.IsMasterClient) return;
 

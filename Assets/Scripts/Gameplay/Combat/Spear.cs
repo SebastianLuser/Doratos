@@ -105,12 +105,6 @@ public class Spear : MonoBehaviourPun, IPunObservable
             return;
         }
 
-        var dummyHealth = other.GetComponent<DummyHealth>();
-        if (dummyHealth != null && !dummyHealth.IsDead)
-        {
-            dummyHealth.TakeDamage(spearData.damage);
-            photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
-        }
     }
 
     [PunRPC]

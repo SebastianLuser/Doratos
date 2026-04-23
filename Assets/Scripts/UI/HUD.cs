@@ -29,7 +29,6 @@ public class HUD : MonoBehaviour
     private PlayerHealth localHealth;
     private PlayerState localState;
     private List<PlayerHealth> allHealths = new List<PlayerHealth>();
-    private List<DummyHealth> dummyHealths = new List<DummyHealth>();
     private Spear spearRef;
     private int localSlot = -1;
 
@@ -109,16 +108,6 @@ public class HUD : MonoBehaviour
         ApplyPlayerColor(health.transform, slot);
     }
 
-    public void RegisterDummy(DummyHealth dummy)
-    {
-        if (!dummyHealths.Contains(dummy))
-            dummyHealths.Add(dummy);
-
-        int slot = allHealths.Count + dummyHealths.Count - 1;
-        if (slot < SlotColors.Length)
-            ApplyPlayerColor(dummy.transform, slot);
-    }
-
     public void RegisterSpear(Spear spear)
     {
         spearRef = spear;
@@ -148,20 +137,6 @@ public class HUD : MonoBehaviour
             {
                 healthBars[barIndex].fillAmount = h.HealthNormalized;
                 healthBars[barIndex].color = h.IsDead ? Color.gray : SlotColors[barIndex];
-            }
-            barIndex++;
-        }
-
-        foreach (var dh in dummyHealths)
-        {
-            if (barIndex >= healthBars.Length) break;
-            if (healthBars[barIndex] != null && dh != null)
-            {
-                healthBars[barIndex].fillAmount = dh.HealthNormalized;
-                healthBars[barIndex].color = dh.IsDead ? Color.gray : SlotColors[barIndex];
-
-                if (playerLabels[barIndex] != null)
-                    playerLabels[barIndex].text = "Player " + (barIndex + 1);
             }
             barIndex++;
         }

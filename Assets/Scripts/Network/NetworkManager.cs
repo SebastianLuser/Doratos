@@ -97,13 +97,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
     }
 
-    public void ConnectOffline()
-    {
-        if (State != ConnectionState.Idle && State != ConnectionState.Disconnected) return;
-        SetState(ConnectionState.Connecting);
-        PhotonNetwork.OfflineMode = true;
-    }
-
     public void CreateRoom(string roomName, int killLimit = 0)
     {
         if (State != ConnectionState.InLobby) return;
@@ -150,17 +143,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        if (PhotonNetwork.OfflineMode)
-        {
-            if (State == ConnectionState.Connecting)
-            {
-                PhotonNetwork.CreateRoom("OfflineRoom");
-                return;
-            }
-            PhotonNetwork.OfflineMode = false;
-            SetState(ConnectionState.Idle);
-            return;
-        }
         SetState(ConnectionState.InLobby);
         PhotonNetwork.JoinLobby();
     }
@@ -177,7 +159,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom.PlayerCount >= 4)
+        if (PhotonNetwork.CurrentRoom.PlayerCount >= 4)
         {
             SetState(ConnectionState.StartingMatch);
             if (PhotonNetwork.IsMasterClient)

@@ -17,7 +17,6 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Button connectButton;
     [SerializeField] private Button retryButton;
-    [SerializeField] private Button testSoloButton;
 
     [Header("Room Creation")]
     [SerializeField] private TMP_InputField roomNameInput;
@@ -68,8 +67,6 @@ public class LobbyUI : MonoBehaviour
         connectButton.onClick.AddListener(OnConnectClicked);
         if (retryButton != null)
             retryButton.onClick.AddListener(OnConnectClicked);
-        if (testSoloButton != null)
-            testSoloButton.onClick.AddListener(OnTestSoloClicked);
         if (createRoomButton != null)
             createRoomButton.onClick.AddListener(OnCreateRoomClicked);
         if (leaveRoomButton != null)
@@ -112,12 +109,6 @@ public class LobbyUI : MonoBehaviour
     {
         ApplyNickname();
         NetworkManager.Instance.Connect();
-    }
-
-    private void OnTestSoloClicked()
-    {
-        ApplyNickname();
-        NetworkManager.Instance.ConnectOffline();
     }
 
     private void OnCreateRoomClicked()
@@ -285,7 +276,6 @@ public class LobbyUI : MonoBehaviour
     private void ShowConnectionUI(bool show)
     {
         if (connectButton != null) connectButton.gameObject.SetActive(show);
-        if (testSoloButton != null) testSoloButton.gameObject.SetActive(show);
         if (nicknameInput != null) nicknameInput.gameObject.SetActive(show);
         if (retryButton != null) retryButton.gameObject.SetActive(false);
     }
