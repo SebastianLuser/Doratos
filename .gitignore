@@ -10,6 +10,7 @@
 /[Bb]uilds/
 /[Ll]ogs/
 .claude/
+.claude.bak/
 CLAUDE.md
 /[Uu]ser[Ss]ettings/
 *.log
