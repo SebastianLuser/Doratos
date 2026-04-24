@@ -15,6 +15,10 @@ public class HUD : MonoBehaviour
     [SerializeField] private TextMeshProUGUI feedbackText;
     private float feedbackTimer;
 
+    [Header("Network Status")]
+    [SerializeField] private TextMeshProUGUI networkStatusText;
+    private float networkStatusTimer;
+
     [Header("Health Bars")]
     [SerializeField] private Image[] healthBars = new Image[4];
     [SerializeField] private TextMeshProUGUI[] playerLabels = new TextMeshProUGUI[4];
@@ -46,6 +50,54 @@ public class HUD : MonoBehaviour
         Instance = this;
     }
 
+    private void Start()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnError        += HandleNetworkError;
+            NetworkManager.Instance.OnStateChanged += HandleNetworkState;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Instance != null)
+        {
+            NetworkManager.Instance.OnError        -= HandleNetworkError;
+            NetworkManager.Instance.OnStateChanged -= HandleNetworkState;
+        }
+    }
+
+    private void HandleNetworkError(string message)
+    {
+        ShowNetworkStatus(message, 4f);
+    }
+
+    private void HandleNetworkState(ConnectionState state)
+    {
+        switch (state)
+        {
+            case ConnectionState.Disconnected:
+                ShowNetworkStatus("Sin conexión con el servidor", 6f);
+                if (EndScreenUI.Instance != null)
+                    EndScreenUI.Instance.ShowConnectionLost();
+                break;
+            case ConnectionState.Connecting:
+                ShowNetworkStatus("Conectando...", 3f);
+                break;
+            case ConnectionState.WaitingOpponent:
+                ShowNetworkStatus("Esperando oponente...", 3f);
+                break;
+        }
+    }
+
+    public void ShowNetworkStatus(string message, float duration = 4f)
+    {
+        if (networkStatusText == null) return;
+        networkStatusText.text = message;
+        networkStatusTimer = duration;
+    }
+
     public void UpdateTimer(float remaining, bool fireActive)
     {
         if (timerText == null) return;
@@ -69,6 +121,7 @@ public class HUD : MonoBehaviour
         UpdateHealthBars();
         UpdateSpearState();
         UpdateFeedback();
+        UpdateNetworkStatus();
 
         if (Input.GetKeyDown(KeyCode.Tab) && seriesPanel != null)
         {
@@ -185,6 +238,18 @@ public class HUD : MonoBehaviour
             feedbackTimer -= Time.deltaTime;
             if (feedbackTimer <= 0f)
                 feedbackText.text = "";
+        }
+    }
+
+    private void UpdateNetworkStatus()
+    {
+        if (networkStatusText == null) return;
+
+        if (networkStatusTimer > 0f)
+        {
+            networkStatusTimer -= Time.deltaTime;
+            if (networkStatusTimer <= 0f)
+                networkStatusText.text = "";
         }
     }
 
