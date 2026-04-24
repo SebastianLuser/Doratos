@@ -3,9 +3,6 @@ using UnityEngine;
 
 public class BlockReceiver : MonoBehaviourPun
 {
-    [Tooltip("Ventana de tolerancia en ms para compensar latencia de red.")]
-    [SerializeField] private int toleranceMs = 200;
-
     private Shield shield;
     private int activatedTimestamp = int.MinValue;
     private bool isActive;
@@ -14,12 +11,11 @@ public class BlockReceiver : MonoBehaviourPun
     {
         shield = GetComponentInChildren<Shield>();
     }
-    
+
     public bool CanBlock(int hitTimestamp, Vector3 incomingDirection)
     {
         if (!isActive) return false;
-        int delta = hitTimestamp - activatedTimestamp;
-        if (delta < -toleranceMs) return false;
+        if (activatedTimestamp > hitTimestamp) return false;
 
         return shield != null && shield.IsBlocking(incomingDirection);
     }

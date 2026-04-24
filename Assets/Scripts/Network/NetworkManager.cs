@@ -255,6 +255,21 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         cachedRoomList.Clear();
         SetState(ConnectionState.Disconnected);
-        OnError?.Invoke("Desconectado: " + cause);
+
+        string msg = cause switch
+        {
+            DisconnectCause.None                        => "Desconectado del servidor",
+            DisconnectCause.ServerTimeout               => "Sin respuesta del servidor",
+            DisconnectCause.ClientTimeout               => "Se perdió la conexión",
+            DisconnectCause.DisconnectByServerLogic     => "Desconectado por el servidor",
+            DisconnectCause.DisconnectByClientLogic     => "Desconectado por el cliente",
+            DisconnectCause.MaxCcuReached               => "Servidor lleno, intentá más tarde",
+            DisconnectCause.InvalidAuthentication       => "Error de autenticación",
+            DisconnectCause.ExceptionOnConnect          => "No se pudo conectar al servidor",
+            DisconnectCause.Exception                   => "Error de conexión inesperado",
+            _                                           => $"Sin conexión ({cause})"
+        };
+
+        OnError?.Invoke(msg);
     }
 }
