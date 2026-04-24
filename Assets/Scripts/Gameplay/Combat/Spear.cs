@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Photon.Pun;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public enum SpearState : byte
@@ -80,8 +81,14 @@ public class Spear : MonoBehaviourPun, IPunObservable
         {
             Vector3 offset = transform.position - throwOrigin;
             if (offset.sqrMagnitude >= maxDistanceSqr)
-                photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
+                StopSpearFlight();
         }
+    }
+
+    private void StopSpearFlight()
+    {
+       if (State == SpearState.InFlight)
+            photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -95,11 +102,10 @@ public class Spear : MonoBehaviourPun, IPunObservable
             int hitActorNr = health.photonView.OwnerActorNr;
             if (hitActorNr == HolderActorNr) return;
 
-            var blockReceiver = other.GetComponent<BlockReceiver>();
-            bool isBlocked = blockReceiver != null &&
-                             blockReceiver.CanBlock(PhotonNetwork.ServerTimestamp, rb.velocity.normalized);
+            var shield = other.GetComponentInChildren<Shield>();
+            bool isShielding = shield != null && shield.IsActive;
 
-            if (isBlocked)
+            if (isShielding && shield.IsBlocking(rb.velocity.normalized))
             {
                 photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
             }
@@ -111,6 +117,8 @@ public class Spear : MonoBehaviourPun, IPunObservable
             return;
         }
 
+        if (other.CompareTag("Obstacle"))
+            StopSpearFlight();
     }
 
     [PunRPC]
