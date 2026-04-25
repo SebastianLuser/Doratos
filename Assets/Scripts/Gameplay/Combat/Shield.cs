@@ -4,21 +4,11 @@ public class Shield : MonoBehaviour
 {
     [SerializeField] private GameObject shieldVisual;
 
-    private static readonly Color shieldColor = new Color(0.45f, 0.25f, 0.1f);
-
     public bool IsActive { get; private set; }
 
     private void Start()
     {
-        ApplyColor();
         Deactivate();
-    }
-
-    private void ApplyColor()
-    {
-        if (shieldVisual == null) return;
-        var r = shieldVisual.GetComponent<Renderer>();
-        if (r != null) r.material.color = shieldColor;
     }
 
     public void Activate()

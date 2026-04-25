@@ -20,7 +20,7 @@ public class HUD : MonoBehaviour
     private float networkStatusTimer;
 
     [Header("Health Bars")]
-    [SerializeField] private Image[] healthBars = new Image[4];
+    [SerializeField] private RectTransform[] healthFills = new RectTransform[4];  // imagen Fill de cada barra
     [SerializeField] private TextMeshProUGUI[] playerLabels = new TextMeshProUGUI[4];
 
     [Header("Timer")]
@@ -181,23 +181,28 @@ public class HUD : MonoBehaviour
     {
         int barIndex = 0;
 
-        for (int i = 0; i < allHealths.Count && barIndex < healthBars.Length; i++)
+        for (int i = 0; i < allHealths.Count && barIndex < healthFills.Length; i++)
         {
             var h = allHealths[i];
-            if (healthBars[barIndex] == null) { barIndex++; continue; }
+            if (healthFills[barIndex] == null) { barIndex++; continue; }
 
             if (h != null)
             {
-                healthBars[barIndex].fillAmount = h.HealthNormalized;
-                healthBars[barIndex].color = h.IsDead ? Color.gray : SlotColors[barIndex];
+                float fill = Mathf.Clamp01(h.HealthNormalized);
+                healthFills[barIndex].localScale = new Vector3(fill, 1f, 1f);
+
+                var img = healthFills[barIndex].GetComponent<Image>();
+                if (img != null)
+                    img.color = h.IsDead ? Color.gray : SlotColors[barIndex];
             }
             barIndex++;
         }
 
-        for (int i = barIndex; i < healthBars.Length; i++)
+        // Barras sin jugador asignado → vacías
+        for (int i = barIndex; i < healthFills.Length; i++)
         {
-            if (healthBars[i] != null)
-                healthBars[i].fillAmount = 0f;
+            if (healthFills[i] != null)
+                healthFills[i].localScale = new Vector3(0f, 1f, 1f);
         }
     }
 

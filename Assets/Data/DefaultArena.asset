@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: DefaultArena
   m_EditorClassIdentifier: Assembly-CSharp::ArenaSO
   arenaSize: 20
-  spawnPointA: {x: -7, y: 0, z: 0}
-  spawnPointB: {x: 7, y: 0, z: 0}
+  spawnPoints:
+  - {x: -7, y: 0, z: -7}
+  - {x: 7, y: 0, z: -7}
+  - {x: -7, y: 0, z: 7}
+  - {x: 7, y: 0, z: 7}
   coverPrefabs: []

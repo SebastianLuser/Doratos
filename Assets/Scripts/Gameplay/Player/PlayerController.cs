@@ -9,8 +9,11 @@ public class PlayerController : MonoBehaviourPun
     private Rigidbody rb;
     private Camera mainCam;
     private PlayerState playerState;
+    private SlowEffect slowEffect;
+    private MeleeWeapon meleeWeapon;
     private Spear currentSpear;
     private bool hasSpear;
+    public bool HasSpear => hasSpear;
 
     private bool isCharging;
     private float chargeTimer;
@@ -21,8 +24,10 @@ public class PlayerController : MonoBehaviourPun
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        rb          = GetComponent<Rigidbody>();
         playerState = GetComponent<PlayerState>();
+        slowEffect  = GetComponent<SlowEffect>();
+        meleeWeapon = GetComponent<MeleeWeapon>();
         HideAimIndicator();
     }
 
@@ -47,8 +52,11 @@ public class PlayerController : MonoBehaviourPun
         if (!photonView.IsMine) return;
         if (playerState.CurrentState != PlayerStateId.Default) return;
 
-        if (!hasSpear || currentSpear == null) return;
+        // Melee — solo si no tiene lanza
+        if (!hasSpear && Input.GetKeyDown(KeyCode.E))
+            meleeWeapon?.RequestSwing();
 
+        if (!hasSpear || currentSpear == null) return;
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -122,6 +130,8 @@ public class PlayerController : MonoBehaviourPun
         float speed = stats.moveSpeed;
         if (playerState != null)
             speed *= playerState.MoveSpeedMultiplier;
+        if (slowEffect != null)
+            speed *= slowEffect.Multiplier;
 
         Vector3 targetPos = rb.position + direction * speed * Time.fixedDeltaTime;
         rb.MovePosition(targetPos);

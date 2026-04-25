@@ -25,6 +25,7 @@ public class PlayerState : MonoBehaviourPun
 
     private Shield shield;
     private BlockReceiver blockReceiver;
+    private PlayerController playerController;
 
     public Vector3 DashDirection => dashDirection;
 
@@ -32,6 +33,7 @@ public class PlayerState : MonoBehaviourPun
     {
         shield = GetComponentInChildren<Shield>();
         blockReceiver = GetComponent<BlockReceiver>();
+        playerController = GetComponent<PlayerController>();
     }
 
     private void Update()
@@ -80,17 +82,15 @@ public class PlayerState : MonoBehaviourPun
 
     private void EnterShielding()
     {
+        // No se puede cubrir si se tiene la lanza en mano
+        if (playerController != null && playerController.HasSpear) return;
+
         CurrentState = PlayerStateId.Shielding;
         shieldActiveTimer = stats.shieldMaxDuration;
         if (shield != null) shield.Activate();
-
-        // Broadcast con el ServerTimestamp del momento exacto de activación.
-        // BlockReceiver.CanBlock() usará este timestamp para validar bloqueos.
         photonView.RPC(nameof(BlockReceiver.RPC_BlockActivated), RpcTarget.All,
                        PhotonNetwork.ServerTimestamp);
     }
-
-    // Salida específica del estado Shielding: notifica a BlockReceiver antes de resetear.
     private void ExitShield()
     {
         photonView.RPC(nameof(BlockReceiver.RPC_BlockDeactivated), RpcTarget.All);

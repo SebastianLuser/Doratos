@@ -13,6 +13,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     [SerializeField] private FireRing fireRing;
 
     public bool IsInMatch { get; private set; }
+    public FireRing FireRing => fireRing;
 
     private HashSet<int> deadActors = new HashSet<int>();
     private int totalPlayers;

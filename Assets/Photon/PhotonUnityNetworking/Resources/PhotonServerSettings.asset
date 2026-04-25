@@ -55,6 +55,9 @@ MonoBehaviour:
   - RPC_LoadNextRound
   - RPC_BlockActivated
   - RPC_BlockDeactivated
+  - RPC_ApplySlow
+  - RPC_RequestSwingToMC
+  - RPC_Swing
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
