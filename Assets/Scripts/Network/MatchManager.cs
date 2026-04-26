@@ -25,7 +25,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
     private GameObject localPlayerGO;
     private GameObject spearGO;
-    private GameObject currentMapGO;  // <-- track the spawned map
+    private GameObject currentMapGO;
 
     private void Awake()
     {
@@ -50,11 +50,10 @@ public class MatchManager : MonoBehaviourPunCallbacks
         while (HUD.Instance == null)
             yield return null;
 
-        // Master picks a random map index and tells everyone which one to spawn
         if (PhotonNetwork.IsMasterClient)
         {
             int mapIndex = Random.Range(0, arenaSO.maps.Length);
-            photonView.RPC(nameof(RPC_SpawnMap), RpcTarget.All, mapIndex);
+            SpawnMap(mapIndex);
         }
 
         SpawnLocalPlayer();
@@ -63,9 +62,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
             SpawnSpear();
     }
 
-    // Each client instantiates the map locally — maps are regular scene objects, not Photon objects
-    [PunRPC]
-    private void RPC_SpawnMap(int mapIndex)
+    private void SpawnMap(int mapIndex)
     {
         if (arenaSO.maps == null || arenaSO.maps.Length == 0)
         {
@@ -84,8 +81,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         Vector3 pos = mapSpawnpoint != null ? mapSpawnpoint.position : Vector3.zero;
         Quaternion rot = mapSpawnpoint != null ? mapSpawnpoint.rotation : Quaternion.identity;
-        currentMapGO = Instantiate(prefab, pos, rot);
-        Debug.Log($"[MatchManager] Spawned map '{prefab.name}' at {pos}");
+
+        currentMapGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Maps/" + prefab.name, pos, rot);
+        Debug.Log($"[MatchManager] Spawned map '{prefab.name}' via InstantiateRoomObject at {pos}");
     }
 
     private void Update()
@@ -320,11 +318,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(spearGO);
             spearGO = null;
         }
-
-        // Destroy the locally instantiated map on every client
-        if (currentMapGO != null)
+        if (PhotonNetwork.IsMasterClient && currentMapGO != null)
         {
-            Destroy(currentMapGO);
+            PhotonNetwork.Destroy(currentMapGO);
             currentMapGO = null;
         }
 
@@ -347,11 +343,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(spearGO);
             spearGO = null;
         }
-
-        // Destroy the locally instantiated map on every client
-        if (currentMapGO != null)
+        if (PhotonNetwork.IsMasterClient && currentMapGO != null)
         {
-            Destroy(currentMapGO);
+            PhotonNetwork.Destroy(currentMapGO);
             currentMapGO = null;
         }
 

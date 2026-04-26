@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: DefaultGladiator
   m_EditorClassIdentifier: Assembly-CSharp::GladiatorSO
   maxHP: 100
-  moveSpeed: 6
+  moveSpeed: 8.5
   rotationSpeed: 720
-  dashDistance: 5
-  dashCooldown: 3
-  dashDurationSec: 0.15
   shieldMoveMultiplier: 0.5
+  shieldMaxDuration: 2
+  shieldCooldown: 3
+  dashSpeedMultiplier: 3
+  dashDuration: 0.25
+  dashCooldown: 3
