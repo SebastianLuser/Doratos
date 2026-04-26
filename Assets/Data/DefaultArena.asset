@@ -12,10 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f39e5f0a1b044204cb46e2e985d5d077, type: 3}
   m_Name: DefaultArena
   m_EditorClassIdentifier: Assembly-CSharp::ArenaSO
-  arenaSize: 20
+  arenaSize: 75
   spawnPoints:
-  - {x: -7, y: 0, z: -7}
-  - {x: 7, y: 0, z: -7}
-  - {x: -7, y: 0, z: 7}
-  - {x: 7, y: 0, z: 7}
-  coverPrefabs: []
+  - {x: -25, y: 0, z: -12.5}
+  - {x: 25, y: 0, z: 12.5}
+  - {x: -25, y: 0, z: 12.5}
+  - {x: 25, y: 0, z: -12.5}
+  maps:
+  - {fileID: 5009306781194884696, guid: ab2c7bd8740948a418f0080e7ffdaabf, type: 3}
+  - {fileID: 7023105566021457283, guid: f5c72f3c7f05e3246bcf351ba3720447, type: 3}
+  - {fileID: 4046553524375233973, guid: 833ecd98f9382374387a9f11c4464df3, type: 3}
+  - {fileID: 6304150305922772660, guid: 33219529a683cb04cbc70064ae50ad7a, type: 3}

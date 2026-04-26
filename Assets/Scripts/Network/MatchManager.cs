@@ -11,6 +11,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     [SerializeField] private MatchConfigSO matchConfig;
     [SerializeField] private ArenaSO arenaSO;
     [SerializeField] private FireRing fireRing;
+    [SerializeField] private Transform mapSpawnpoint;
 
     public bool IsInMatch { get; private set; }
     public FireRing FireRing => fireRing;
@@ -24,6 +25,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
     private GameObject localPlayerGO;
     private GameObject spearGO;
+    private GameObject currentMapGO;  // <-- track the spawned map
 
     private void Awake()
     {
@@ -48,10 +50,42 @@ public class MatchManager : MonoBehaviourPunCallbacks
         while (HUD.Instance == null)
             yield return null;
 
+        // Master picks a random map index and tells everyone which one to spawn
+        if (PhotonNetwork.IsMasterClient)
+        {
+            int mapIndex = Random.Range(0, arenaSO.maps.Length);
+            photonView.RPC(nameof(RPC_SpawnMap), RpcTarget.All, mapIndex);
+        }
+
         SpawnLocalPlayer();
 
         if (PhotonNetwork.IsMasterClient)
             SpawnSpear();
+    }
+
+    // Each client instantiates the map locally — maps are regular scene objects, not Photon objects
+    [PunRPC]
+    private void RPC_SpawnMap(int mapIndex)
+    {
+        if (arenaSO.maps == null || arenaSO.maps.Length == 0)
+        {
+            Debug.LogWarning("[MatchManager] No maps assigned in ArenaSO.");
+            return;
+        }
+
+        mapIndex = Mathf.Clamp(mapIndex, 0, arenaSO.maps.Length - 1);
+        GameObject prefab = arenaSO.maps[mapIndex];
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[MatchManager] Map prefab at index {mapIndex} is null.");
+            return;
+        }
+
+        Vector3 pos = mapSpawnpoint != null ? mapSpawnpoint.position : Vector3.zero;
+        Quaternion rot = mapSpawnpoint != null ? mapSpawnpoint.rotation : Quaternion.identity;
+        currentMapGO = Instantiate(prefab, pos, rot);
+        Debug.Log($"[MatchManager] Spawned map '{prefab.name}' at {pos}");
     }
 
     private void Update()
@@ -172,9 +206,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     public void NotifyPlayerDied(int deadActorNr)
     {
         if (!IsInMatch) return;
-
         if (!PhotonNetwork.IsMasterClient) return;
-
         photonView.RPC(nameof(RPC_PlayerDied), RpcTarget.All, deadActorNr);
     }
 
@@ -266,7 +298,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
         float delay = matchConfig != null ? matchConfig.endScreenDelaySec : 3f;
         yield return new WaitForSeconds(delay);
 
-        // Solo el master dispara el reload — la RPC lo ejecuta en TODOS los clientes
         if (PhotonNetwork.IsMasterClient)
             photonView.RPC(nameof(RPC_LoadNextRound), RpcTarget.All);
     }
@@ -289,6 +320,14 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(spearGO);
             spearGO = null;
         }
+
+        // Destroy the locally instantiated map on every client
+        if (currentMapGO != null)
+        {
+            Destroy(currentMapGO);
+            currentMapGO = null;
+        }
+
         yield return new WaitForSeconds(0.3f);
         SceneManager.LoadScene("Arena");
     }
@@ -303,11 +342,17 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(localPlayerGO);
             localPlayerGO = null;
         }
-
         if (PhotonNetwork.IsMasterClient && spearGO != null)
         {
             PhotonNetwork.Destroy(spearGO);
             spearGO = null;
+        }
+
+        // Destroy the locally instantiated map on every client
+        if (currentMapGO != null)
+        {
+            Destroy(currentMapGO);
+            currentMapGO = null;
         }
 
         NetworkManager.Instance.ReturnToRoom();

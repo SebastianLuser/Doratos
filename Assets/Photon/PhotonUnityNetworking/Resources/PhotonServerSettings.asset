@@ -58,6 +58,7 @@ MonoBehaviour:
   - RPC_ApplySlow
   - RPC_RequestSwingToMC
   - RPC_Swing
+  - RPC_SpawnMap
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
