@@ -1,35 +1,30 @@
+using System.Collections;
 using Photon.Pun;
 using UnityEngine;
 
-/// <summary>
-/// Componente reutilizable de slow. Va en la raíz del Gladiador.
-/// Cualquier fuente de daño (melee, lanza a futuro, etc.) puede aplicar slow
-/// llamando RPC_ApplySlow via el PhotonView del jugador afectado.
-/// PlayerController lee Multiplier al calcular la velocidad.
-/// </summary>
 public class SlowEffect : MonoBehaviourPun
 {
     public float Multiplier { get; private set; } = 1f;
 
-    private float slowTimer;
+    private Coroutine slowCoroutine;
 
-    private void Update()
+    public void ApplySlow(float multiplier, float duration)
     {
-        if (slowTimer > 0f)
-        {
-            slowTimer -= Time.deltaTime;
-            if (slowTimer <= 0f)
-                Multiplier = 1f;
-        }
+        if (slowCoroutine != null) StopCoroutine(slowCoroutine);
+        slowCoroutine = StartCoroutine(SlowRoutine(multiplier, duration));
     }
 
     [PunRPC]
     public void RPC_ApplySlow(float multiplier, float duration)
     {
-        Multiplier  = multiplier;
-        slowTimer   = duration;
+        ApplySlow(multiplier, duration);
+    }
 
-        if (HUD.Instance != null && photonView.IsMine)
-            HUD.Instance.ShowFeedback("¡Estás ralentizado!", duration);
+    private IEnumerator SlowRoutine(float multiplier, float duration)
+    {
+        Debug.Log("Slow Effect Applied!");
+        Multiplier = multiplier;
+        yield return new WaitForSeconds(duration);
+        Multiplier = 1f;
     }
 }

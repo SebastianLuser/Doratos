@@ -86,12 +86,9 @@ public class PlayerController : MonoBehaviourPun
         HandleRotation();
     }
 
-    public void SetSpearReference(Spear spear)
-    {
-        currentSpear = spear;
-    }
+    public void SetSpearReference(Spear spear) => currentSpear = spear;
 
-    private void TryThrowSpear()
+    public void TryThrowSpear()
     {
         if (currentSpear == null || currentSpear.State != SpearState.Held) return;
         if (currentSpear.HolderActorNr != photonView.OwnerActorNr) return;
@@ -102,6 +99,7 @@ public class PlayerController : MonoBehaviourPun
 
         Vector3 origin = transform.position + Vector3.up * 0.8f + transform.forward * 1f;
         currentSpear.RequestThrow(origin, transform.forward, speed);
+        Spear.SetPickupCooldown(photonView.OwnerActorNr, stats.spearPickupDelay);
         hasSpear = false;
     }
 
@@ -128,13 +126,10 @@ public class PlayerController : MonoBehaviourPun
         }
 
         float speed = stats.moveSpeed;
-        if (playerState != null)
-            speed *= playerState.MoveSpeedMultiplier;
-        if (slowEffect != null)
-            speed *= slowEffect.Multiplier;
+        if (playerState != null) speed *= playerState.MoveSpeedMultiplier;
+        if (slowEffect != null)  speed *= slowEffect.Multiplier;
 
-        Vector3 targetPos = rb.position + direction * speed * Time.fixedDeltaTime;
-        rb.MovePosition(targetPos);
+        rb.MovePosition(rb.position + direction * (speed * Time.fixedDeltaTime));
     }
 
     private void HandleRotation()
@@ -147,14 +142,11 @@ public class PlayerController : MonoBehaviourPun
         if (groundPlane.Raycast(ray, out float distance))
         {
             Vector3 point = ray.GetPoint(distance);
-            Vector3 lookDir = point - transform.position;
-            lookDir.y = 0f;
+            Vector3 lookDir = new Vector3(point.x - transform.position.x, 0f, point.z - transform.position.z);
 
             if (lookDir.sqrMagnitude > 0.01f)
-            {
-                Quaternion targetRot = Quaternion.LookRotation(lookDir);
-                rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRot, stats.rotationSpeed * Time.fixedDeltaTime));
-            }
+                rb.MoveRotation(Quaternion.RotateTowards(rb.rotation,
+                    Quaternion.LookRotation(lookDir), stats.rotationSpeed * Time.fixedDeltaTime));
         }
     }
 }

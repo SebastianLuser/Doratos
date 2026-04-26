@@ -166,17 +166,17 @@ GameObject:
   - component: {fileID: 4509663487983273934}
   - component: {fileID: 8097744353842098766}
   - component: {fileID: 2229797745705780635}
-  - component: {fileID: 3344227779098881651}
+  - component: {fileID: 4626087131830244959}
   - component: {fileID: 5000906396003562165}
   - component: {fileID: 7953695979375186643}
   - component: {fileID: 4415571618855964473}
   - component: {fileID: 8759759943226532970}
   - component: {fileID: 5972156356194733298}
   - component: {fileID: 8870588304123356173}
-  - component: {fileID: 7240455043957765749}
+  - component: {fileID: 4957669974223928136}
   - component: {fileID: 6135937618158443340}
   - component: {fileID: 2828317886121590787}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Gladiator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -251,13 +251,13 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 3344227779098881651}
+  - {fileID: 0}
   - {fileID: 4415571618855964473}
   - {fileID: 8759759943226532970}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &3344227779098881651
+--- !u!114 &4626087131830244959
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -268,7 +268,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonTransformView
+  m_EditorClassIdentifier: 
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 0
@@ -349,7 +349,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c50d15adda2177342b3ca40ad61e47cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &7240455043957765749
+--- !u!114 &4957669974223928136
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -358,7 +358,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2144342664343839659}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55bbc26b150c25643acc784570713658, type: 3}
+  m_Script: {fileID: 11500000, guid: e63f60b669d7ba14781255a0292c0891, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &6135937618158443340

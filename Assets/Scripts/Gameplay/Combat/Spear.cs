@@ -25,12 +25,13 @@ public class Spear : MonoBehaviourPun, IPunObservable
     private Vector3 throwOrigin;
     private float maxDistanceSqr;
 
-    private static Dictionary<int, PlayerHealth> playersByActorNr = new Dictionary<int, PlayerHealth>();
+    private static Dictionary<int, PlayerHealth> playersByActorNr = new();
+    private static Dictionary<int, float> pickupCooldownByActorNr = new();
 
     private void Awake()
     {
         Current = this;
-        rb = GetComponent<Rigidbody>();
+        rb  = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
     }
 
@@ -45,20 +46,20 @@ public class Spear : MonoBehaviourPun, IPunObservable
             HUD.Instance.RegisterSpear(this);
     }
 
-    public static void RegisterPlayer(int actorNr, PlayerHealth health)
-    {
+    public static void RegisterPlayer(int actorNr, PlayerHealth health) =>
         playersByActorNr[actorNr] = health;
-    }
 
-    public static void UnregisterPlayer(int actorNr)
-    {
+    public static void UnregisterPlayer(int actorNr) =>
         playersByActorNr.Remove(actorNr);
-    }
 
     public static void ClearPlayers()
     {
         playersByActorNr.Clear();
+        pickupCooldownByActorNr.Clear();
     }
+
+    public static void SetPickupCooldown(int actorNr, float delay) =>
+        pickupCooldownByActorNr[actorNr] = Time.time + delay;
 
     private void Update()
     {
@@ -66,15 +67,12 @@ public class Spear : MonoBehaviourPun, IPunObservable
 
         if (State == SpearState.InFlight)
         {
-            // Distancia máxima de vuelo
-            Vector3 offset = transform.position - throwOrigin;
-            if (offset.sqrMagnitude >= maxDistanceSqr)
+            if ((transform.position - throwOrigin).sqrMagnitude >= maxDistanceSqr)
             {
                 StopSpearFlight();
                 return;
             }
 
-            // Si el aro de fuego está activo y la lanza lo abandona → grounded al instante
             if (MatchManager.Instance != null && MatchManager.Instance.FireRing != null &&
                 MatchManager.Instance.FireRing.IsActive)
             {
@@ -87,7 +85,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
 
     private void StopSpearFlight()
     {
-       if (State == SpearState.InFlight)
+        if (State == SpearState.InFlight)
             photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
     }
 
@@ -106,9 +104,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
             bool isShielding = shield != null && shield.IsActive;
 
             if (isShielding && shield.IsBlocking(rb.velocity.normalized))
-            {
                 photonView.RPC(nameof(RPC_SpearGrounded), RpcTarget.All, transform.position);
-            }
             else
             {
                 health.photonView.RPC(nameof(PlayerHealth.RPC_TakeDamage), RpcTarget.All, spearData.damage);
@@ -141,6 +137,9 @@ public class Spear : MonoBehaviourPun, IPunObservable
     [PunRPC]
     public void RPC_SpearGrounded(Vector3 position)
     {
+        if (HolderActorNr != -1 && playersByActorNr.TryGetValue(HolderActorNr, out PlayerHealth prev))
+            prev.GetComponent<PlayerController>()?.OnSpearPickedUp(false);
+
         State = SpearState.Grounded;
         HolderActorNr = -1;
         transform.SetParent(null);
@@ -157,16 +156,9 @@ public class Spear : MonoBehaviourPun, IPunObservable
     [PunRPC]
     public void RPC_PickedUp(int actorNr)
     {
-        // Notificar al dueño anterior que perdió la lanza
-        if (HolderActorNr != -1 && HolderActorNr != actorNr)
-        {
-            if (playersByActorNr.TryGetValue(HolderActorNr, out PlayerHealth prevHolder))
-            {
-                var prevController = prevHolder.GetComponent<PlayerController>();
-                if (prevController != null)
-                    prevController.OnSpearPickedUp(false);
-            }
-        }
+        if (HolderActorNr != -1 && HolderActorNr != actorNr &&
+            playersByActorNr.TryGetValue(HolderActorNr, out PlayerHealth prevHolder))
+            prevHolder.GetComponent<PlayerController>()?.OnSpearPickedUp(false);
 
         State = SpearState.Held;
         HolderActorNr = actorNr;
@@ -201,13 +193,9 @@ public class Spear : MonoBehaviourPun, IPunObservable
         if (State != SpearState.Held) return;
 
         if (PhotonNetwork.IsMasterClient)
-        {
             photonView.RPC(nameof(RPC_Throw), RpcTarget.All, origin, direction, HolderActorNr, speed);
-        }
         else
-        {
             photonView.RPC(nameof(RPC_RequestThrowToMC), RpcTarget.MasterClient, origin, direction, PhotonNetwork.LocalPlayer.ActorNumber, speed);
-        }
     }
 
     [PunRPC]
@@ -219,20 +207,12 @@ public class Spear : MonoBehaviourPun, IPunObservable
         photonView.RPC(nameof(RPC_Throw), RpcTarget.All, origin, direction, actorNr, speed);
     }
 
-    public void RequestPickup(int actorNr)
-    {
+    public void RequestPickup(int actorNr) =>
         photonView.RPC(nameof(RPC_RequestPickupToMC), RpcTarget.MasterClient, actorNr);
-    }
 
-    /// <summary>
-    /// Transferencia forzada desde Master Client (ej: golpe melee).
-    /// No requiere que la lanza esté Grounded — funciona estando Held.
-    /// </summary>
     public void RequestTransfer(int newHolderActorNr)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
-        if (State != SpearState.Held) return;
-
+        if (!PhotonNetwork.IsMasterClient || State != SpearState.Held) return;
         photonView.RPC(nameof(RPC_PickedUp), RpcTarget.All, newHolderActorNr);
     }
 
@@ -241,6 +221,8 @@ public class Spear : MonoBehaviourPun, IPunObservable
     {
         if (!PhotonNetwork.IsMasterClient) return;
         if (State != SpearState.Grounded) return;
+
+        if (pickupCooldownByActorNr.TryGetValue(actorNr, out float readyAt) && Time.time < readyAt) return;
 
         photonView.RPC(nameof(RPC_PickedUp), RpcTarget.All, actorNr);
     }
@@ -254,7 +236,7 @@ public class Spear : MonoBehaviourPun, IPunObservable
         }
         else
         {
-            State = (SpearState)(byte)stream.ReceiveNext();
+            State    = (SpearState)(byte)stream.ReceiveNext();
             HolderActorNr = (int)stream.ReceiveNext();
         }
     }

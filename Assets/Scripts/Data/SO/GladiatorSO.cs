@@ -12,4 +12,5 @@ public class GladiatorSO : ScriptableObject
     public float dashSpeedMultiplier = 3f;
     public float dashDuration = 0.25f;
     public float dashCooldown = 4f;
+    public float spearPickupDelay = 0.25f;
 }
