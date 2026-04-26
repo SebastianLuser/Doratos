@@ -55,7 +55,7 @@ public class SpikeTrap : MonoBehaviourPun
 
         foreach (var hit in Physics.OverlapBox(WorldCenter, detectionHalfExtents, transform.rotation, playerLayerMask, QueryTriggerInteraction.Ignore))
         {
-            var pv = hit.GetComponentInParent<PhotonView>() ?? hit.GetComponentInChildren<PhotonView>();
+            var pv = hit.GetComponent<PhotonView>();
             if (pv == null || pv.OwnerActorNr != actorNr) continue;
 
             // Authoritative: MasterClient only
