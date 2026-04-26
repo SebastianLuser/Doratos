@@ -20,7 +20,7 @@ public class HUD : MonoBehaviour
     private float networkStatusTimer;
 
     [Header("Health Bars")]
-    [SerializeField] private RectTransform[] healthFills = new RectTransform[4];  // imagen Fill de cada barra
+    [SerializeField] private Image[] healthFills = new Image[4];  // imagen Fill de cada barra
     [SerializeField] private TextMeshProUGUI[] playerLabels = new TextMeshProUGUI[4];
 
     [Header("Timer")]
@@ -170,39 +170,36 @@ public class HUD : MonoBehaviour
     {
         if (allHealths.Contains(health)) return allHealths.IndexOf(health);
         if (allHealths.Count >= 4) return -1;
+
         allHealths.Add(health);
         int slot = allHealths.Count - 1;
+
         if (slot < playerLabels.Length && playerLabels[slot] != null)
             playerLabels[slot].text = "Player " + (slot + 1);
+
+        if (slot < healthFills.Length && healthFills[slot] != null)
+            healthFills[slot].color = SlotColors[slot];
+
         return slot;
     }
 
     private void UpdateHealthBars()
     {
-        int barIndex = 0;
-
-        for (int i = 0; i < allHealths.Count && barIndex < healthFills.Length; i++)
+        for (int i = 0; i < healthFills.Length; i++)
         {
-            var h = allHealths[i];
-            if (healthFills[barIndex] == null) { barIndex++; continue; }
+            if (healthFills[i] == null) continue;
+
+            var h = i < allHealths.Count ? allHealths[i] : null;
 
             if (h != null)
             {
-                float fill = Mathf.Clamp01(h.HealthNormalized);
-                healthFills[barIndex].localScale = new Vector3(fill, 1f, 1f);
-
-                var img = healthFills[barIndex].GetComponent<Image>();
-                if (img != null)
-                    img.color = h.IsDead ? Color.gray : SlotColors[barIndex];
+                healthFills[i].fillAmount = Mathf.Clamp01(h.HealthNormalized);
+                healthFills[i].color = h.IsDead ? Color.gray : SlotColors[i];
             }
-            barIndex++;
-        }
-
-        // Barras sin jugador asignado → vacías
-        for (int i = barIndex; i < healthFills.Length; i++)
-        {
-            if (healthFills[i] != null)
-                healthFills[i].localScale = new Vector3(0f, 1f, 1f);
+            else
+            {
+                healthFills[i].fillAmount = 0f;
+            }
         }
     }
 
