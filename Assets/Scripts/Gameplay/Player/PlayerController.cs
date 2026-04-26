@@ -98,8 +98,8 @@ public class PlayerController : MonoBehaviourPun
         float speed = Mathf.Lerp(data.minThrowSpeed, data.maxThrowSpeed, t);
 
         Vector3 origin = transform.position + Vector3.up * 0.8f + transform.forward * 1f;
-        currentSpear.RequestThrow(origin, transform.forward, speed);
         Spear.SetPickupCooldown(photonView.OwnerActorNr, stats.spearPickupDelay);
+        currentSpear.RequestThrow(origin, transform.forward, speed);
         hasSpear = false;
     }
 
