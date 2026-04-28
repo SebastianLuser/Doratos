@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53d3b8ee88e9bb5419f0a2e333f0da75, type: 3}
   m_Name: DefaultSpear
   m_EditorClassIdentifier: Assembly-CSharp::SpearSO
-  throwSpeed: 20
+  minThrowSpeed: 8
+  maxThrowSpeed: 25
+  chargeMaxSec: 1.5
   damage: 100
-  lifetimeMaxSec: 5
+  maxDistance: 30
   pickupRadius: 1.5
