@@ -161,17 +161,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private int GetSpawnIndex(int actorNumber)
     {
-        int index = 0;
-        var players = PhotonNetwork.PlayerList;
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i].ActorNumber == actorNumber)
-            {
-                index = i;
-                break;
-            }
-        }
-        return Mathf.Clamp(index, 0, arenaSO.spawnPoints.Length - 1);
+        // ActorNumber es único y consistente en todos los clientes — no depende del orden de PlayerList
+        return (actorNumber - 1) % arenaSO.spawnPoints.Length;
     }
 
     private void SpawnSpear()
@@ -244,16 +235,22 @@ public class MatchManager : MonoBehaviourPunCallbacks
         }
     }
     
-    public void NotifyPlayerLeft()
+    public void NotifyPlayerLeft(int disconnectedActorNr)
     {
         if (!IsInMatch) return;
         if (!PhotonNetwork.IsMasterClient) return;
 
-        // Si quedan menos de 2 jugadores no hay match posible → volver al lobby
-        bool noPlayersLeft = PhotonNetwork.CurrentRoom.PlayerCount < 2;
-
-        photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All,
-                       PhotonNetwork.LocalPlayer.ActorNumber, "Disconnect", noPlayersLeft, 0);
+        if (PhotonNetwork.CurrentRoom.PlayerCount < 2)
+        {
+            // No quedan suficientes jugadores → terminar match y volver al lobby
+            photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All,
+                           PhotonNetwork.LocalPlayer.ActorNumber, "Disconnect", true, 0);
+        }
+        else
+        {
+            // Quedan 2+ jugadores → tratar la desconexión como muerte y continuar la ronda
+            photonView.RPC(nameof(RPC_PlayerDied), RpcTarget.All, disconnectedActorNr);
+        }
     }
 
     [PunRPC]

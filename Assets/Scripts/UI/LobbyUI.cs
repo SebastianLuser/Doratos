@@ -116,7 +116,7 @@ public class LobbyUI : MonoBehaviour
         if (roomNameInput == null) return;
         string roomName = roomNameInput.text.Trim();
         if (string.IsNullOrEmpty(roomName))
-            roomName = PhotonNetwork.NickName + "_Arena";
+            roomName = PhotonNetwork.NickName + "_" + Random.Range(1000, 10000);
 
         int killLimit = 0;
         if (killLimitInput != null && !string.IsNullOrEmpty(killLimitInput.text))
@@ -207,7 +207,10 @@ public class LobbyUI : MonoBehaviour
             var entry = Instantiate(roomEntryPrefab, roomListContent);
             var text = entry.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
-                text.text = $"{room.Name}  ({room.PlayerCount}/{room.MaxPlayers})";
+            {
+                string status = room.IsOpen ? $"{room.PlayerCount}/{room.MaxPlayers}" : "En partida";
+                text.text = $"{room.Name}  ({status})";
+            }
 
             var button = entry.GetComponent<Button>();
             if (button != null)

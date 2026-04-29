@@ -163,7 +163,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             SetState(ConnectionState.StartingMatch);
             if (PhotonNetwork.IsMasterClient)
+            {
+                PhotonNetwork.CurrentRoom.IsOpen = false;
                 PhotonNetwork.LoadLevel("Arena");
+            }
         }
         else
         {
@@ -185,7 +188,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if (index >= 0)
                 cachedRoomList.RemoveAt(index);
 
-            if (room.RemovedFromList || !room.IsVisible || !room.IsOpen)
+            if (room.RemovedFromList || !room.IsVisible)
                 continue;
 
             cachedRoomList.Add(room);
@@ -201,7 +204,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         SetState(ConnectionState.InLobby);
-        OnError?.Invoke("Error al unirse: " + message);
+        string msg = returnCode == ErrorCode.GameFull    ? "La sala está llena" :
+                     returnCode == ErrorCode.GameClosed  ? "Hay una partida en progreso" :
+                     "Error al unirse: " + message;
+        OnError?.Invoke(msg);
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -212,7 +218,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             SetState(ConnectionState.StartingMatch);
             if (PhotonNetwork.IsMasterClient)
+            {
+                PhotonNetwork.CurrentRoom.IsOpen = false;
                 PhotonNetwork.LoadLevel("Arena");
+            }
         }
     }
 
@@ -223,7 +232,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         if (MatchManager.Instance != null && MatchManager.Instance.IsInMatch)
         {
             if (PhotonNetwork.IsMasterClient)
-                MatchManager.Instance.NotifyPlayerLeft();
+                MatchManager.Instance.NotifyPlayerLeft(otherPlayer.ActorNumber);
         }
         else
         {

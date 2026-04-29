@@ -25,6 +25,10 @@ public class Spear : MonoBehaviourPun, IPunObservable
     private Vector3 throwOrigin;
     private float maxDistanceSqr;
 
+    // Interpolación de red — actualizadas en OnPhotonSerializeView, aplicadas en Update
+    private Vector3 networkPos;
+    private Vector3 networkVel;
+
     private static Dictionary<int, PlayerHealth> playersByActorNr = new();
     private static Dictionary<int, float> pickupCooldownByActorNr = new();
 
@@ -63,6 +67,13 @@ public class Spear : MonoBehaviourPun, IPunObservable
 
     private void Update()
     {
+        // Clientes no-Master: interpolar posición de la lanza en vuelo cada frame
+        if (!PhotonNetwork.IsMasterClient && State == SpearState.InFlight)
+        {
+            transform.position = Vector3.Lerp(transform.position, networkPos, 0.2f);
+            rb.velocity        = networkVel;
+        }
+
         if (!PhotonNetwork.IsMasterClient) return;
 
         if (State == SpearState.InFlight)
@@ -231,13 +242,14 @@ public class Spear : MonoBehaviourPun, IPunObservable
     {
         if (stream.IsWriting)
         {
-            stream.SendNext((byte)State);
-            stream.SendNext(HolderActorNr);
+            stream.SendNext(transform.position);
+            stream.SendNext(rb.velocity);
         }
         else
         {
-            State    = (SpearState)(byte)stream.ReceiveNext();
-            HolderActorNr = (int)stream.ReceiveNext();
+            // Solo guardar los valores — la interpolación se aplica en Update() cada frame
+            networkPos = (Vector3)stream.ReceiveNext();
+            networkVel = (Vector3)stream.ReceiveNext();
         }
     }
 }
