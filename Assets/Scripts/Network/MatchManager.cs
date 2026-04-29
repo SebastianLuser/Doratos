@@ -240,6 +240,15 @@ public class MatchManager : MonoBehaviourPunCallbacks
         if (!IsInMatch) return;
         if (!PhotonNetwork.IsMasterClient) return;
 
+        if (Spear.Current != null &&
+            Spear.Current.State == SpearState.Held &&
+            Spear.Current.HolderActorNr == disconnectedActorNr)
+        {
+            Spear.Current.photonView.RPC(
+                nameof(Spear.RPC_SpearGrounded), RpcTarget.All,
+                Spear.Current.transform.position);
+        }
+
         if (PhotonNetwork.CurrentRoom.PlayerCount < 2)
         {
             // No quedan suficientes jugadores → terminar match y volver al lobby

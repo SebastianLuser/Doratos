@@ -27,9 +27,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public event System.Action OnRoomPlayersChanged;
     public event System.Action OnSeriesUpdated;
 
-    private List<RoomInfo> cachedRoomList = new List<RoomInfo>();
+    private Dictionary<string, RoomInfo> cachedRooms = new Dictionary<string, RoomInfo>();
 
-    public List<RoomInfo> GetCachedRoomList() => new List<RoomInfo>(cachedRoomList);
+    public List<RoomInfo> GetCachedRoomList() => new List<RoomInfo>(cachedRooms.Values);
 
     // --- Series properties ---
 
@@ -177,21 +177,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         UpdateCachedRoomList(roomList);
-        OnRoomListChanged?.Invoke(cachedRoomList);
+        OnRoomListChanged?.Invoke(GetCachedRoomList());
     }
 
     private void UpdateCachedRoomList(List<RoomInfo> changes)
     {
         foreach (var room in changes)
         {
-            int index = cachedRoomList.FindIndex(r => r.Name == room.Name);
-            if (index >= 0)
-                cachedRoomList.RemoveAt(index);
-
             if (room.RemovedFromList || !room.IsVisible)
-                continue;
-
-            cachedRoomList.Add(room);
+                cachedRooms.Remove(room.Name);
+            else
+                cachedRooms[room.Name] = room;
         }
     }
 
@@ -263,7 +259,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        cachedRoomList.Clear();
+        cachedRooms.Clear();
         SetState(ConnectionState.Disconnected);
 
         string msg = cause switch
