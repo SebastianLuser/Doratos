@@ -24,8 +24,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
     private GameObject localPlayerGO;
-    private GameObject spearGO;
-    private GameObject currentMapGO;
 
     private void Awake()
     {
@@ -82,7 +80,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
         Vector3 pos = mapSpawnpoint != null ? mapSpawnpoint.position : Vector3.zero;
         Quaternion rot = mapSpawnpoint != null ? mapSpawnpoint.rotation : Quaternion.identity;
 
-        currentMapGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Maps/" + prefab.name, pos, rot);
+        PhotonNetwork.InstantiateRoomObject("Prefabs/Maps/" + prefab.name, pos, rot);
         Debug.Log($"[MatchManager] Spawned map '{prefab.name}' via InstantiateRoomObject at {pos}");
     }
 
@@ -146,11 +144,10 @@ public class MatchManager : MonoBehaviourPunCallbacks
         Vector3 center = Vector3.zero;
         Quaternion spawnRot = Quaternion.LookRotation(center - spawnPos);
         localPlayerGO = PhotonNetwork.Instantiate("Prefabs/Gladiator", spawnPos, spawnRot);
-        var playerGO = localPlayerGO;
         totalPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
 
-        var health = playerGO.GetComponent<PlayerHealth>();
-        var state = playerGO.GetComponent<PlayerState>();
+        var health = localPlayerGO.GetComponent<PlayerHealth>();
+        var state  = localPlayerGO.GetComponent<PlayerState>();
 
         Spear.RegisterPlayer(PhotonNetwork.LocalPlayer.ActorNumber, health);
         playerHealths[PhotonNetwork.LocalPlayer.ActorNumber] = health;
@@ -167,11 +164,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private void SpawnSpear()
     {
-        spearGO = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
-        var spear = spearGO.GetComponent<Spear>();
-
-        if (HUD.Instance != null && spear != null)
-            HUD.Instance.RegisterSpear(spear);
+        var go = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
+        if (HUD.Instance != null)
+            HUD.Instance.RegisterSpear(go.GetComponent<Spear>());
     }
 
     public void RegisterRemotePlayer(PlayerHealth health, int actorNr)
@@ -322,16 +317,10 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(localPlayerGO);
             localPlayerGO = null;
         }
-        if (PhotonNetwork.IsMasterClient && spearGO != null)
-        {
-            PhotonNetwork.Destroy(spearGO);
-            spearGO = null;
-        }
-        if (PhotonNetwork.IsMasterClient && currentMapGO != null)
-        {
-            PhotonNetwork.Destroy(currentMapGO);
-            currentMapGO = null;
-        }
+        if (PhotonNetwork.IsMasterClient && Spear.Current != null)
+            PhotonNetwork.Destroy(Spear.Current.gameObject);
+        if (PhotonNetwork.IsMasterClient && MapRoot.Current != null)
+            PhotonNetwork.Destroy(MapRoot.Current.gameObject);
 
         yield return new WaitForSeconds(0.3f);
         SceneManager.LoadScene("Arena");
@@ -347,16 +336,10 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(localPlayerGO);
             localPlayerGO = null;
         }
-        if (PhotonNetwork.IsMasterClient && spearGO != null)
-        {
-            PhotonNetwork.Destroy(spearGO);
-            spearGO = null;
-        }
-        if (PhotonNetwork.IsMasterClient && currentMapGO != null)
-        {
-            PhotonNetwork.Destroy(currentMapGO);
-            currentMapGO = null;
-        }
+        if (PhotonNetwork.IsMasterClient && Spear.Current != null)
+            PhotonNetwork.Destroy(Spear.Current.gameObject);
+        if (PhotonNetwork.IsMasterClient && MapRoot.Current != null)
+            PhotonNetwork.Destroy(MapRoot.Current.gameObject);
 
         NetworkManager.Instance.ReturnToRoom();
     }
