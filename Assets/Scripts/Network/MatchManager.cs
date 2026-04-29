@@ -243,17 +243,17 @@ public class MatchManager : MonoBehaviourPunCallbacks
             photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All, lastAliveActor, "LastManStanding", seriesOver, newKills);
         }
     }
-
-    public void EndMatchByDisconnect()
+    
+    public void NotifyPlayerLeft()
     {
         if (!IsInMatch) return;
-        IsInMatch = false;
+        if (!PhotonNetwork.IsMasterClient) return;
 
-        if (HUD.Instance != null)
-            HUD.Instance.ShowFeedback("Un gladiador abandonó la arena");
+        // Si quedan menos de 2 jugadores no hay match posible → volver al lobby
+        bool noPlayersLeft = PhotonNetwork.CurrentRoom.PlayerCount < 2;
 
-        int localActor = PhotonNetwork.LocalPlayer.ActorNumber;
-        RPC_EndMatch(localActor, "Disconnect", false, 0);
+        photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All,
+                       PhotonNetwork.LocalPlayer.ActorNumber, "Disconnect", noPlayersLeft, 0);
     }
 
     [PunRPC]
@@ -264,6 +264,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
         bool isWinner = PhotonNetwork.LocalPlayer.ActorNumber == winnerActorNr;
 
         int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
+
+        if (reason == "Disconnect" && HUD.Instance != null)
+            HUD.Instance.ShowFeedback("Un gladiador abandonó la arena");
 
         if (EndScreenUI.Instance != null)
         {

@@ -222,7 +222,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         if (MatchManager.Instance != null && MatchManager.Instance.IsInMatch)
         {
-            MatchManager.Instance.EndMatchByDisconnect();
+            if (PhotonNetwork.IsMasterClient)
+                MatchManager.Instance.NotifyPlayerLeft();
         }
         else
         {
