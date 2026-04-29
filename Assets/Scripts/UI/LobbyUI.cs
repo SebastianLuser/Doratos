@@ -122,6 +122,13 @@ public class LobbyUI : MonoBehaviour
         if (killLimitInput != null && !string.IsNullOrEmpty(killLimitInput.text))
             int.TryParse(killLimitInput.text, out killLimit);
 
+        if (killLimit < 0)
+        {
+            killLimit = 0;
+            SetStatus("El límite de kills no puede ser negativo");
+            return;
+        }
+
         NetworkManager.Instance.CreateRoom(roomName, killLimit);
     }
 
