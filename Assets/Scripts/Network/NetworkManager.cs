@@ -124,7 +124,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         SetState(ConnectionState.StartingMatch);
         PhotonNetwork.CurrentRoom.IsOpen = false;
-        PhotonNetwork.CurrentRoom.IsVisible = false;
         PhotonNetwork.LoadLevel("Arena");
     }
 
@@ -155,6 +154,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedLobby()
     {
+        cachedRooms.Clear();
         SetState(ConnectionState.InLobby);
     }
 
