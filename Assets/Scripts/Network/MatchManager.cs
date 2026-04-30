@@ -21,7 +21,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
     private float matchStartTime;
     private bool fireRingStarted;
     private float fireDamageTimer;
-
+    private int readyClients = 0;
+    
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
     private GameObject localPlayerGO;
 
@@ -33,7 +34,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private IEnumerator Start()
     {
-        Debug.Log($"[MatchManager] Start — InRoom={PhotonNetwork.InRoom}, IsMaster={PhotonNetwork.IsMasterClient}");
         if (!PhotonNetwork.InRoom) yield break;
 
         IsInMatch = true;
@@ -41,18 +41,18 @@ public class MatchManager : MonoBehaviourPunCallbacks
         Spear.ClearPlayers();
 
         bool hudAlreadyLoaded = SceneManager.GetSceneByName("HUD").isLoaded;
-        Debug.Log($"[MatchManager] HUD ya cargado={hudAlreadyLoaded}");
         if (!hudAlreadyLoaded)
             SceneManager.LoadScene("HUD", LoadSceneMode.Additive);
 
         while (HUD.Instance == null)
             yield return null;
 
-        if (PhotonNetwork.IsMasterClient)
-        {
-            int mapIndex = Random.Range(0, arenaSO.maps.Length);
-            SpawnMap(mapIndex);
-        }
+        // Signal MasterClient that this client is scene-ready
+        photonView.RPC(nameof(RPC_ClientReady), RpcTarget.MasterClient);
+
+        // Wait for map to exist before spawning player
+        while (MapRoot.Current == null)
+            yield return null;
 
         SpawnLocalPlayer();
 
@@ -60,6 +60,20 @@ public class MatchManager : MonoBehaviourPunCallbacks
             SpawnSpear();
     }
 
+    [PunRPC]
+    private void RPC_ClientReady()
+    {
+        // Only runs on MasterClient
+        readyClients++;
+        Debug.Log($"[MatchManager] Clients ready: {readyClients}/{PhotonNetwork.CurrentRoom.PlayerCount}");
+
+        if (readyClients >= PhotonNetwork.CurrentRoom.PlayerCount)
+        {
+            int mapIndex = Random.Range(0, arenaSO.maps.Length);
+            SpawnMap(mapIndex);
+        }
+    }
+    
     private void SpawnMap(int mapIndex)
     {
         if (arenaSO.maps == null || arenaSO.maps.Length == 0)
@@ -246,13 +260,13 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.CurrentRoom.PlayerCount < 2)
         {
-            // No quedan suficientes jugadores → terminar match y volver al lobby
+            // No quedan suficientes jugadores: terminar match y volver al lobby
             photonView.RPC(nameof(RPC_EndMatch), RpcTarget.All,
                            PhotonNetwork.LocalPlayer.ActorNumber, "Disconnect", true, 0);
         }
         else
         {
-            // Quedan 2+ jugadores → tratar la desconexión como muerte y continuar la ronda
+            // Quedan 2+ jugadores: tratar la desconexión como muerte y continuar la ronda
             photonView.RPC(nameof(RPC_PlayerDied), RpcTarget.All, disconnectedActorNr);
         }
     }
