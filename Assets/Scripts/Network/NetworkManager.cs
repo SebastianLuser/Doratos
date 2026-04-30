@@ -194,15 +194,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         SetState(ConnectionState.InLobby);
-        OnError?.Invoke("Error al crear sala: " + message);
+        OnError?.Invoke("Error when creating room: " + message);
     }
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         SetState(ConnectionState.InLobby);
-        string msg = returnCode == ErrorCode.GameFull    ? "La sala está llena" :
-                     returnCode == ErrorCode.GameClosed  ? "Hay una partida en progreso" :
-                     "Error al unirse: " + message;
+        string msg = returnCode == ErrorCode.GameFull    ? "The Room is Full" :
+                     returnCode == ErrorCode.GameClosed  ? "A match is in progress" :
+                     "Error when joining: " + message;
         OnError?.Invoke(msg);
     }
 
@@ -264,16 +264,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         string msg = cause switch
         {
-            DisconnectCause.None                        => "Desconectado del servidor",
-            DisconnectCause.ServerTimeout               => "Sin respuesta del servidor",
-            DisconnectCause.ClientTimeout               => "Se perdió la conexión",
-            DisconnectCause.DisconnectByServerLogic     => "Desconectado por el servidor",
-            DisconnectCause.DisconnectByClientLogic     => "Desconectado por el cliente",
-            DisconnectCause.MaxCcuReached               => "Servidor lleno, intentá más tarde",
-            DisconnectCause.InvalidAuthentication       => "Error de autenticación",
-            DisconnectCause.ExceptionOnConnect          => "No se pudo conectar al servidor",
-            DisconnectCause.Exception                   => "Error de conexión inesperado",
-            _                                           => $"Sin conexión ({cause})"
+            DisconnectCause.None                        => "Disconnected from server",
+            DisconnectCause.ServerTimeout               => "No response from server",
+            DisconnectCause.ClientTimeout               => "Connection Lost",
+            DisconnectCause.DisconnectByServerLogic     => "Disconnected by the server",
+            DisconnectCause.DisconnectByClientLogic     => "Disconnected by the client",
+            DisconnectCause.MaxCcuReached               => "Server full, try again later",
+            DisconnectCause.InvalidAuthentication       => "Authentication Error",
+            DisconnectCause.ExceptionOnConnect          => "Couldn't connect to Server",
+            DisconnectCause.Exception                   => "Unexpected Connection Issue",
+            _                                           => $"No Connection ({cause})"
         };
 
         OnError?.Invoke(msg);

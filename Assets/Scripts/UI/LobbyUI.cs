@@ -4,6 +4,7 @@ using TMPro;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
@@ -21,6 +22,8 @@ public class LobbyUI : MonoBehaviour
     [Header("Room Creation")]
     [SerializeField] private TMP_InputField roomNameInput;
     [SerializeField] private TMP_InputField killLimitInput;
+    [SerializeField] private GameObject roomsContentGameObject;
+    [SerializeField] private GameObject creationContentGameObject;
     [SerializeField] private Button createRoomButton;
 
     [Header("Room List")]
@@ -125,7 +128,7 @@ public class LobbyUI : MonoBehaviour
         if (killLimit < 0)
         {
             killLimit = 0;
-            SetStatus("El límite de kills no puede ser negativo");
+            SetStatus("The kill limit cannot be negative");
             return;
         }
 
@@ -147,7 +150,7 @@ public class LobbyUI : MonoBehaviour
         if (nicknameInput == null) return;
         string nick = nicknameInput.text.Trim();
         if (string.IsNullOrEmpty(nick))
-            nick = "Gladiador" + Random.Range(100, 999);
+            nick = "Gladiator" + Random.Range(100, 999);
         NetworkManager.Instance.SetNickname(nick);
         PlayerPrefs.SetString("PlayerNickname", nick);
     }
@@ -160,11 +163,11 @@ public class LobbyUI : MonoBehaviour
                 ShowIdle();
                 break;
             case ConnectionState.Connecting:
-                SetStatus("Conectando al servidor...");
+                SetStatus("Connecting to the server...");
                 ShowConnectionUI(false);
                 break;
             case ConnectionState.InLobby:
-                SetStatus("En el lobby — Creá o elegí una sala");
+                SetStatus("In Lobby - Create or Join a Room!");
                 ShowLobbyUI(true);
                 ShowRoomUI(false);
                 HandleRoomListChanged(NetworkManager.Instance.GetCachedRoomList());
@@ -172,7 +175,7 @@ public class LobbyUI : MonoBehaviour
                 refreshCoroutine = StartCoroutine(AutoRefreshRoomList());
                 break;
             case ConnectionState.CreatingRoom:
-                SetStatus("Creando sala...");
+                SetStatus("Creating Room...");
                 ShowLobbyUI(false);
                 break;
             case ConnectionState.WaitingOpponent:
@@ -182,13 +185,13 @@ public class LobbyUI : MonoBehaviour
                 UpdateStartButton();
                 break;
             case ConnectionState.StartingMatch:
-                SetStatus("¡Arena completa! Cargando...");
+                SetStatus("¡Arena Complete! Loading...");
                 ShowConnectionUI(false);
                 ShowLobbyUI(false);
                 ShowRoomUI(false);
                 break;
             case ConnectionState.Disconnected:
-                SetStatus("Desconectado del servidor");
+                SetStatus("Disconnected from Server");
                 ShowConnectionUI(false);
                 ShowLobbyUI(false);
                 ShowRoomUI(false);
@@ -215,7 +218,7 @@ public class LobbyUI : MonoBehaviour
             var text = entry.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null)
             {
-                string status = room.IsOpen ? $"{room.PlayerCount}/{room.MaxPlayers}" : "En partida";
+                string status = room.IsOpen ? $"{room.PlayerCount}/{room.MaxPlayers}" : "In Round";
                 text.text = $"{room.Name}  ({status})";
             }
 
@@ -261,7 +264,7 @@ public class LobbyUI : MonoBehaviour
 
         var room = PhotonNetwork.CurrentRoom;
         int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
-        string seriesInfo = killLimit > 0 ? $"  (Serie: primero en {killLimit} kills)" : "";
+        string seriesInfo = killLimit > 0 ? $"  (Series: first to {killLimit} kills)" : "";
 
         string players = "";
         foreach (var p in PhotonNetwork.PlayerList)
@@ -272,12 +275,12 @@ public class LobbyUI : MonoBehaviour
             players += $"\n  - {p.NickName}{hostTag}{killTag}";
         }
 
-        roomInfoText.text = $"Sala: {room.Name}{seriesInfo}\nGladiadores ({room.PlayerCount}/{room.MaxPlayers}):{players}";
+        roomInfoText.text = $"Room: {room.Name}{seriesInfo}\nGladiators ({room.PlayerCount}/{room.MaxPlayers}):{players}";
     }
 
     private void ShowIdle()
     {
-        SetStatus("Ingresá tu nombre y conectate");
+        SetStatus("Enter your name and connect");
         ShowConnectionUI(true);
         ShowLobbyUI(false);
         ShowRoomUI(false);
@@ -293,7 +296,8 @@ public class LobbyUI : MonoBehaviour
     private void ShowLobbyUI(bool show)
     {
         if (roomNameInput != null) roomNameInput.gameObject.SetActive(show);
-        if (createRoomButton != null) createRoomButton.gameObject.SetActive(show);
+        if (roomsContentGameObject != null) roomsContentGameObject.SetActive(show);
+        if (creationContentGameObject != null) creationContentGameObject.SetActive(show);
         if (roomListContent != null)
         {
             var scroll = roomListContent.GetComponentInParent<UnityEngine.UI.ScrollRect>();
