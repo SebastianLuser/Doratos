@@ -14,7 +14,8 @@ public class LobbyUI : MonoBehaviour
     [Header("Nickname")]
     [SerializeField] private TMP_InputField nicknameInput;
 
-    [Header("Connection")]
+    [Header("Connection")] 
+    [SerializeField] private CanvasGroup connectionCanvasGroup;
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Button connectButton;
     [SerializeField] private Button retryButton;
@@ -165,6 +166,8 @@ public class LobbyUI : MonoBehaviour
             case ConnectionState.Connecting:
                 SetStatus("Connecting to the server...");
                 ShowConnectionUI(false);
+                ShowLobbyUI(false);
+                ShowRoomUI(false);
                 break;
             case ConnectionState.InLobby:
                 SetStatus("In Lobby - Create or Join a Room!");
@@ -177,11 +180,14 @@ public class LobbyUI : MonoBehaviour
                 break;
             case ConnectionState.CreatingRoom:
                 SetStatus("Creating Room...");
+                ShowConnectionUI(false);
                 ShowLobbyUI(false);
+                ShowRoomUI(false);
                 break;
             case ConnectionState.WaitingOpponent:
                 ShowRoomUI(true);
                 ShowLobbyUI(false);
+                ShowConnectionUI(false);
                 UpdateRoomInfo();
                 UpdateStartButton();
                 break;
@@ -289,6 +295,7 @@ public class LobbyUI : MonoBehaviour
 
     private void ShowConnectionUI(bool show)
     {
+        if (connectionCanvasGroup != null) connectionCanvasGroup.SetVisibility(show);
         if (connectButton != null) connectButton.gameObject.SetActive(show);
         if (nicknameInput != null) nicknameInput.gameObject.SetActive(show);
         if (retryButton != null) retryButton.gameObject.SetActive(false);
