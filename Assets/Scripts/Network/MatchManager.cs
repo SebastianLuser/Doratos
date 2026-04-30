@@ -29,6 +29,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        PhotonNetwork.IsMessageQueueRunning = true;
+
     }
 
     private IEnumerator Start()
@@ -55,6 +57,11 @@ public class MatchManager : MonoBehaviourPunCallbacks
         {
             int mapIndex = Random.Range(0, arenaSO.maps.Length);
             SpawnMap(mapIndex);
+        }
+        else
+        {
+            while (MapRoot.Current == null || Spear.Current == null)
+                yield return null;
         }
 
         SpawnLocalPlayer();
@@ -321,7 +328,11 @@ public class MatchManager : MonoBehaviourPunCallbacks
     }
     
     [PunRPC]
-    private void RPC_ForceSceneReload() => SceneManager.LoadScene("Arena");
+    private void RPC_ForceSceneReload()
+    {
+        PhotonNetwork.IsMessageQueueRunning = false;
+        SceneManager.LoadScene("Arena");
+    }
 
     private IEnumerator ReturnToRoomAfterDelay()
     {
