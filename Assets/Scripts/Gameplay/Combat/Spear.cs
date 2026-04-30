@@ -44,12 +44,6 @@ public class Spear : MonoBehaviourPun, IPunObservable
         if (Current == this) Current = null;
     }
 
-    private void Start()
-    {
-        if (HUD.Instance != null)
-            HUD.Instance.RegisterSpear(this);
-    }
-
     public static void RegisterPlayer(int actorNr, PlayerHealth health) =>
         playersByActorNr[actorNr] = health;
 

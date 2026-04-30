@@ -167,9 +167,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
     private void SpawnSpear()
     {
-        var go = PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
-        if (HUD.Instance != null)
-            HUD.Instance.RegisterSpear(go.GetComponent<Spear>());
+        PhotonNetwork.InstantiateRoomObject("Prefabs/Spear", Vector3.zero, Quaternion.identity);
     }
 
     public void RegisterRemotePlayer(PlayerHealth health, int actorNr)

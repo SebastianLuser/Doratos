@@ -8,10 +8,6 @@ public class HUD : MonoBehaviour
 {
     public static HUD Instance;
 
-    [Header("Spear")]
-    [SerializeField] private TextMeshProUGUI spearStateText;
-
-
     [Header("Network Status")]
     [SerializeField] private GameObject networkStatusPanel;
     [SerializeField] private TextMeshProUGUI networkStatusText;
@@ -31,7 +27,6 @@ public class HUD : MonoBehaviour
     private PlayerHealth localHealth;
     private PlayerState localState;
     private List<PlayerHealth> allHealths = new List<PlayerHealth>();
-    private Spear spearRef;
     private int localSlot = -1;
 
     public static readonly Color[] SlotColors = new Color[]
@@ -118,7 +113,6 @@ public class HUD : MonoBehaviour
     private void Update()
     {
         UpdateHealthBars();
-        UpdateSpearState();
         UpdateNetworkStatus();
 
         if (Input.GetKeyDown(KeyCode.Tab) && seriesPanel != null)
@@ -150,18 +144,11 @@ public class HUD : MonoBehaviour
         localHealth = health;
         localState = state;
         localSlot = AssignSlot(health);
-        ApplyPlayerColor(health.transform, localSlot);
     }
 
     public void RegisterEnemy(PlayerHealth health)
     {
-        int slot = AssignSlot(health);
-        ApplyPlayerColor(health.transform, slot);
-    }
-
-    public void RegisterSpear(Spear spear)
-    {
-        spearRef = spear;
+        AssignSlot(health);
     }
 
     private int AssignSlot(PlayerHealth health)
@@ -173,7 +160,10 @@ public class HUD : MonoBehaviour
         int slot = allHealths.Count - 1;
 
         if (slot < playerLabels.Length && playerLabels[slot] != null)
-            playerLabels[slot].text = "Player " + (slot + 1);
+        {
+            var owner = PhotonNetwork.CurrentRoom?.GetPlayer(health.photonView.OwnerActorNr);
+            playerLabels[slot].text = owner?.NickName ?? "Player " + (slot + 1);
+        }
 
         if (slot < healthFills.Length && healthFills[slot] != null)
             healthFills[slot].color = SlotColors[slot];
@@ -201,34 +191,6 @@ public class HUD : MonoBehaviour
         }
     }
 
-    private void UpdateSpearState()
-    {
-        if (spearStateText == null) return;
-
-        if (spearRef == null)
-        {
-            spearStateText.text = "NO SPEAR";
-            return;
-        }
-
-        switch (spearRef.State)
-        {
-            case SpearState.Held:
-                bool isMine = localHealth != null && spearRef.HolderActorNr == localHealth.photonView.OwnerActorNr;
-                spearStateText.text = isMine ? "ARMED" : "ENEMY ARMED";
-                spearStateText.color = isMine ? Color.green : Color.red;
-                break;
-            case SpearState.InFlight:
-                spearStateText.text = "SPEAR IN FLIGHT";
-                spearStateText.color = Color.yellow;
-                break;
-            case SpearState.Grounded:
-                spearStateText.text = "SPEAR GROUNDED";
-                spearStateText.color = Color.white;
-                break;
-        }
-    }
-
     private void UpdateNetworkStatus()
     {
         if (networkStatusTimer <= 0f) return;
@@ -240,17 +202,4 @@ public class HUD : MonoBehaviour
     }
 
 
-    private void ApplyPlayerColor(Transform playerTransform, int slot)
-    {
-        if (slot < 0 || slot >= SlotColors.Length) return;
-
-        Color color = SlotColors[slot];
-        var body = playerTransform.Find("Body");
-        if (body != null)
-        {
-            var renderer = body.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material.color = color;
-        }
-    }
 }
