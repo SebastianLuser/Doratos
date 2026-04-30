@@ -128,8 +128,10 @@ public class PlayerController : MonoBehaviourPun
         float speed = stats.moveSpeed;
         if (playerState != null) speed *= playerState.MoveSpeedMultiplier;
         if (slowEffect != null)  speed *= slowEffect.Multiplier;
-
-        rb.MovePosition(rb.position + direction * (speed * Time.fixedDeltaTime));
+        
+        Vector3 velocity = direction * speed;
+        velocity.y = rb.velocity.y;
+        rb.velocity = velocity;
     }
 
     private void HandleRotation()
