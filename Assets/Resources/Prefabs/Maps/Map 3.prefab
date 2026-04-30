@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4046553524375233978}
   - component: {fileID: 7170205813312778104}
+  - component: {fileID: 2461546881519897913}
   m_Layer: 0
   m_Name: Map 3
   m_TagString: Untagged
@@ -78,6 +79,18 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &2461546881519897913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4046553524375233973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d1c16f62e7f1ac46aee67f61bbedff9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &182886708
 PrefabInstance:
   m_ObjectHideFlags: 0
