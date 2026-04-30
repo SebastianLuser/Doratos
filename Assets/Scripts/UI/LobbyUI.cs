@@ -169,6 +169,7 @@ public class LobbyUI : MonoBehaviour
             case ConnectionState.InLobby:
                 SetStatus("In Lobby - Create or Join a Room!");
                 ShowLobbyUI(true);
+                ShowConnectionUI(false);
                 ShowRoomUI(false);
                 HandleRoomListChanged(NetworkManager.Instance.GetCachedRoomList());
                 if (refreshCoroutine != null) StopCoroutine(refreshCoroutine);

@@ -137,6 +137,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void SetState(ConnectionState newState)
     {
+        Debug.Log("New State: " + newState.ToString());
         State = newState;
         OnStateChanged?.Invoke(newState);
     }
