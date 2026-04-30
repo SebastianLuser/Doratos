@@ -85,6 +85,8 @@ public class EndScreenUI : MonoBehaviour
         panel.blocksRaycasts = true;
     }
 
+    public void Hide() => HidePanel();
+
     private void HidePanel()
     {
         if (panel == null) return;

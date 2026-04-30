@@ -60,6 +60,7 @@ MonoBehaviour:
   - RPC_Swing
   - RPC_SpawnMap
   - RPC_ActivateTrap
+  - RPC_ForceSceneReload
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

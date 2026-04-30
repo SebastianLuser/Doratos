@@ -40,6 +40,9 @@ public class MatchManager : MonoBehaviourPunCallbacks
         matchStartTime = Time.time;
         Spear.ClearPlayers();
 
+        if (EndScreenUI.Instance != null)
+            EndScreenUI.Instance.Hide();
+
         bool hudAlreadyLoaded = SceneManager.GetSceneByName("HUD").isLoaded;
         Debug.Log($"[MatchManager] HUD ya cargado={hudAlreadyLoaded}");
         if (!hudAlreadyLoaded)
@@ -301,10 +304,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    private void RPC_LoadNextRound()
-    {
-        StartCoroutine(DestroyThenReload());
-    }
+    private void RPC_LoadNextRound() => StartCoroutine(DestroyThenReload());
 
     private IEnumerator DestroyThenReload()
     {
@@ -313,15 +313,17 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(localPlayerGO);
             localPlayerGO = null;
         }
-
         if (!PhotonNetwork.IsMasterClient) yield break;
 
-        if (Spear.Current  != null) PhotonNetwork.Destroy(Spear.Current.gameObject);
+        if (Spear.Current != null) PhotonNetwork.Destroy(Spear.Current.gameObject);
         if (MapRoot.Current != null) PhotonNetwork.Destroy(MapRoot.Current.gameObject);
 
         yield return new WaitForSeconds(0.5f);
-        PhotonNetwork.LoadLevel("Arena");
+        photonView.RPC(nameof(RPC_ForceSceneReload), RpcTarget.All);
     }
+    
+    [PunRPC]
+    private void RPC_ForceSceneReload() => SceneManager.LoadScene("Arena");
 
     private IEnumerator ReturnToRoomAfterDelay()
     {
