@@ -11,11 +11,9 @@ public class HUD : MonoBehaviour
     [Header("Spear")]
     [SerializeField] private TextMeshProUGUI spearStateText;
 
-    [Header("Feedback")]
-    [SerializeField] private TextMeshProUGUI feedbackText;
-    private float feedbackTimer;
 
     [Header("Network Status")]
+    [SerializeField] private GameObject networkStatusPanel;
     [SerializeField] private TextMeshProUGUI networkStatusText;
     private float networkStatusTimer;
 
@@ -96,6 +94,7 @@ public class HUD : MonoBehaviour
         if (networkStatusText == null) return;
         networkStatusText.text = message;
         networkStatusTimer = duration;
+        if (networkStatusPanel != null) networkStatusPanel.SetActive(true);
     }
 
     public void UpdateTimer(float remaining, bool fireActive)
@@ -120,7 +119,6 @@ public class HUD : MonoBehaviour
     {
         UpdateHealthBars();
         UpdateSpearState();
-        UpdateFeedback();
         UpdateNetworkStatus();
 
         if (Input.GetKeyDown(KeyCode.Tab) && seriesPanel != null)
@@ -231,36 +229,16 @@ public class HUD : MonoBehaviour
         }
     }
 
-    private void UpdateFeedback()
-    {
-        if (feedbackText == null) return;
-
-        if (feedbackTimer > 0f)
-        {
-            feedbackTimer -= Time.deltaTime;
-            if (feedbackTimer <= 0f)
-                feedbackText.text = "";
-        }
-    }
-
     private void UpdateNetworkStatus()
     {
-        if (networkStatusText == null) return;
-
-        if (networkStatusTimer > 0f)
+        if (networkStatusTimer <= 0f) return;
+        networkStatusTimer -= Time.deltaTime;
+        if (networkStatusTimer <= 0f)
         {
-            networkStatusTimer -= Time.deltaTime;
-            if (networkStatusTimer <= 0f)
-                networkStatusText.text = "";
+            if (networkStatusPanel != null) networkStatusPanel.SetActive(false);
         }
     }
 
-    public void ShowFeedback(string text, float duration = 1.5f)
-    {
-        if (feedbackText == null) return;
-        feedbackText.text = text;
-        feedbackTimer = duration;
-    }
 
     private void ApplyPlayerColor(Transform playerTransform, int slot)
     {

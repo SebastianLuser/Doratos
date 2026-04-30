@@ -104,8 +104,6 @@ public class MeleeWeapon : MonoBehaviourPun
                 photonView.RPC(nameof(SlowEffect.RPC_ApplySlow), RpcTarget.All,
                                data.slowMultiplier, data.slowDuration);
 
-                if (HUD.Instance != null)
-                    HUD.Instance.ShowFeedback("¡Golpe bloqueado!");
             }
             else
             {

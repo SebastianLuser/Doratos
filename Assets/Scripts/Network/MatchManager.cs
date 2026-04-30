@@ -199,9 +199,6 @@ public class MatchManager : MonoBehaviourPunCallbacks
     {
         deadActors.Add(deadActorNr);
 
-        if (HUD.Instance != null)
-            HUD.Instance.ShowFeedback("¡Gladiador eliminado!");
-
         int alivePlayers = 0;
         int lastAliveActor = -1;
 
@@ -266,8 +263,7 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
 
-        if (reason == "Disconnect" && HUD.Instance != null)
-            HUD.Instance.ShowFeedback("Un gladiador abandonó la arena");
+
 
         if (EndScreenUI.Instance != null)
         {
@@ -317,13 +313,14 @@ public class MatchManager : MonoBehaviourPunCallbacks
             PhotonNetwork.Destroy(localPlayerGO);
             localPlayerGO = null;
         }
-        if (PhotonNetwork.IsMasterClient && Spear.Current != null)
-            PhotonNetwork.Destroy(Spear.Current.gameObject);
-        if (PhotonNetwork.IsMasterClient && MapRoot.Current != null)
-            PhotonNetwork.Destroy(MapRoot.Current.gameObject);
 
-        yield return new WaitForSeconds(0.3f);
-        SceneManager.LoadScene("Arena");
+        if (!PhotonNetwork.IsMasterClient) yield break;
+
+        if (Spear.Current  != null) PhotonNetwork.Destroy(Spear.Current.gameObject);
+        if (MapRoot.Current != null) PhotonNetwork.Destroy(MapRoot.Current.gameObject);
+
+        yield return new WaitForSeconds(0.5f);
+        PhotonNetwork.LoadLevel("Arena");
     }
 
     private IEnumerator ReturnToRoomAfterDelay()

@@ -28,9 +28,6 @@ public class PlayerHealth : MonoBehaviourPun, IPunObservable
 
         CurrentHealth -= damage;
 
-        if (HUD.Instance != null && photonView.IsMine)
-            HUD.Instance.ShowFeedback("¡Recibiste daño!");
-
         if (CurrentHealth <= 0f)
         {
             CurrentHealth = 0f;
