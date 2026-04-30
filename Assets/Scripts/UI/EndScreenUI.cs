@@ -33,36 +33,36 @@ public class EndScreenUI : MonoBehaviour
     // Mid-series round win — no lobby button, shows progress
     public void ShowRoundVictory(int wins, int killLimit)
     {
-        string sub = killLimit > 0 ? $"{wins}/{killLimit} victorias" : $"{wins} victorias";
-        ShowResult("¡Ronda ganada!", sub, showButton: false);
+        string sub = killLimit > 0 ? $"{wins}/{killLimit} victories" : $"{wins} victories";
+        ShowResult("¡Round won!", sub, showButton: false);
     }
 
     // Mid-series round loss — no lobby button
     public void ShowRoundDefeat(int wins, int killLimit)
     {
-        string sub = killLimit > 0 ? $"Líder: {wins}/{killLimit}" : "";
-        ShowResult("Ronda perdida", sub, showButton: false);
+        string sub = killLimit > 0 ? $"Leader: {wins}/{killLimit}" : "";
+        ShowResult("Round lost", sub, showButton: false);
     }
 
     // Series over
     public void ShowSeriesVictory()
     {
-        ShowResult("¡Ganaste la serie!", "", showButton: true);
+        ShowResult("¡You won the series!", "", showButton: true);
     }
 
     public void ShowSeriesDefeat()
     {
-        ShowResult("Perdiste la serie", "", showButton: true);
+        ShowResult("You lost the series", "", showButton: true);
     }
 
     public void ShowDisconnectWin()
     {
-        ShowResult("Oponente desconectado\n¡Victoria!", "", showButton: false);
+        ShowResult("Opponent disconnected\n¡Victory!", "", showButton: false);
     }
 
     public void ShowConnectionLost()
     {
-        ShowResult("Perdiste la conexión", "", showButton: true);
+        ShowResult("You lost connection", "", showButton: true);
     }
 
     private void ShowResult(string title, string subtitle, bool showButton)

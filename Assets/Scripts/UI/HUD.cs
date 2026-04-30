@@ -78,15 +78,15 @@ public class HUD : MonoBehaviour
         switch (state)
         {
             case ConnectionState.Disconnected:
-                ShowNetworkStatus("Sin conexión con el servidor", 6f);
+                ShowNetworkStatus("No connection with the server", 6f);
                 if (EndScreenUI.Instance != null)
                     EndScreenUI.Instance.ShowConnectionLost();
                 break;
             case ConnectionState.Connecting:
-                ShowNetworkStatus("Conectando...", 3f);
+                ShowNetworkStatus("Connecting...", 3f);
                 break;
             case ConnectionState.WaitingOpponent:
-                ShowNetworkStatus("Esperando oponente...", 3f);
+                ShowNetworkStatus("Awaiting opponent...", 3f);
                 break;
         }
     }
@@ -104,7 +104,7 @@ public class HUD : MonoBehaviour
 
         if (fireActive)
         {
-            timerText.text = "FUEGO";
+            timerText.text = "FIRE";
             timerText.color = Color.red;
         }
         else
@@ -136,13 +136,13 @@ public class HUD : MonoBehaviour
         if (seriesText == null || !PhotonNetwork.InRoom) return;
 
         int killLimit = NetworkManager.Instance != null ? NetworkManager.Instance.KillLimit : 0;
-        string header = killLimit > 0 ? $"Serie — primero en {killLimit} kills\n" : "Serie\n";
+        string header = killLimit > 0 ? $"Series — first to {killLimit} kills\n" : "Series\n";
         string lines = "";
         foreach (var p in PhotonNetwork.PlayerList)
         {
             int sk = NetworkManager.Instance != null ? NetworkManager.Instance.GetSeriesKills(p) : 0;
-            string you = p.IsLocal ? " (vos)" : "";
-            lines += $"\n{p.NickName}{you}:  {sk}" + (killLimit > 0 ? $"/{killLimit}" : "");
+            string you = p.IsLocal ? " (you)" : "";
+            lines += $"\n{p.NickName}{you}: {sk}" + (killLimit > 0 ? $"/{killLimit}" : "");
         }
         seriesText.text = header + lines;
     }
@@ -209,7 +209,7 @@ public class HUD : MonoBehaviour
 
         if (spearRef == null)
         {
-            spearStateText.text = "SIN LANZA";
+            spearStateText.text = "NO SPEAR";
             return;
         }
 
@@ -217,15 +217,15 @@ public class HUD : MonoBehaviour
         {
             case SpearState.Held:
                 bool isMine = localHealth != null && spearRef.HolderActorNr == localHealth.photonView.OwnerActorNr;
-                spearStateText.text = isMine ? "ARMADO" : "ENEMIGO ARMADO";
+                spearStateText.text = isMine ? "ARMED" : "ENEMY ARMED";
                 spearStateText.color = isMine ? Color.green : Color.red;
                 break;
             case SpearState.InFlight:
-                spearStateText.text = "EN VUELO";
+                spearStateText.text = "SPEAR IN FLIGHT";
                 spearStateText.color = Color.yellow;
                 break;
             case SpearState.Grounded:
-                spearStateText.text = "EN EL PISO";
+                spearStateText.text = "SPEAR GROUNDED";
                 spearStateText.color = Color.white;
                 break;
         }
