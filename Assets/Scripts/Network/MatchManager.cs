@@ -25,6 +25,8 @@ public class MatchManager : MonoBehaviourPunCallbacks
     private Dictionary<int, PlayerHealth> playerHealths = new Dictionary<int, PlayerHealth>();
     private GameObject localPlayerGO;
 
+    
+    
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -158,12 +160,16 @@ public class MatchManager : MonoBehaviourPunCallbacks
 
         var health = localPlayerGO.GetComponent<PlayerHealth>();
         var state  = localPlayerGO.GetComponent<PlayerState>();
-
+        var materialSetup = localPlayerGO.GetComponent<PlayerMaterialSetup>();
+        
         Spear.RegisterPlayer(PhotonNetwork.LocalPlayer.ActorNumber, health);
         playerHealths[PhotonNetwork.LocalPlayer.ActorNumber] = health;
 
         if (HUD.Instance != null)
             HUD.Instance.RegisterLocalPlayer(health, state);
+        
+        if (materialSetup != null)
+            materialSetup.photonView.RPC(nameof(materialSetup.RPC_SetColors), RpcTarget.AllBuffered, index);
     }
 
     private int GetSpawnIndex(int actorNumber)

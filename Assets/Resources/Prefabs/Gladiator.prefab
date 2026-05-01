@@ -52,7 +52,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6538903991835684241, guid: 908906e8c53630944a785079584c7894, type: 3}
+  - {fileID: 2100000, guid: 1491be25cb45bb34c90dd44955171f3e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -325,6 +325,7 @@ GameObject:
   - component: {fileID: 4957669974223928136}
   - component: {fileID: 6135937618158443340}
   - component: {fileID: 2828317886121590787}
+  - component: {fileID: 3928667829781011289}
   m_Layer: 6
   m_Name: Gladiator
   m_TagString: Untagged
@@ -656,6 +657,22 @@ MonoBehaviour:
     - {x: -0.87909096, y: 0.47665396, z: 0.000000067802574}
     - {x: -0.70710677, y: 0, z: 0.7071068}
     - {x: -0.6216111, y: 0.47665396, z: 0.62161124}
+--- !u!114 &3928667829781011289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2144342664343839659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3483198e57f146bbb8e19bfe694cfed4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerColors: {fileID: 11400000, guid: 3ebea2bd347e51640a1f56c87e652a87, type: 2}
+  renderers:
+  - {fileID: 4111318267488639291}
+  - {fileID: 2837272030412553901}
 --- !u!1 &2673988739013728812
 GameObject:
   m_ObjectHideFlags: 0
@@ -770,7 +787,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6538903991835684241, guid: 908906e8c53630944a785079584c7894, type: 3}
+  - {fileID: 2100000, guid: 1491be25cb45bb34c90dd44955171f3e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

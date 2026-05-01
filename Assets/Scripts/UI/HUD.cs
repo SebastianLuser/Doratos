@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class HUD : MonoBehaviour
@@ -16,6 +17,7 @@ public class HUD : MonoBehaviour
     [Header("Health Bars")]
     [SerializeField] private Image[] healthFills = new Image[4];  // imagen Fill de cada barra
     [SerializeField] private TextMeshProUGUI[] playerLabels = new TextMeshProUGUI[4];
+    [SerializeField] private PlayerColorsSO playerColors;
 
     [Header("Timer")]
     [SerializeField] private TextMeshProUGUI timerText;
@@ -28,14 +30,6 @@ public class HUD : MonoBehaviour
     private PlayerState localState;
     private List<PlayerHealth> allHealths = new List<PlayerHealth>();
     private int localSlot = -1;
-
-    public static readonly Color[] SlotColors = new Color[]
-    {
-        new Color(0.2f, 0.6f, 1f),
-        new Color(1f, 0.3f, 0.3f),
-        new Color(0.3f, 1f, 0.3f),
-        new Color(1f, 0.85f, 0.2f)
-    };
 
     private void Awake()
     {
@@ -166,7 +160,7 @@ public class HUD : MonoBehaviour
         }
 
         if (slot < healthFills.Length && healthFills[slot] != null)
-            healthFills[slot].color = SlotColors[slot];
+            healthFills[slot].color = playerColors.SlotColors[slot];
 
         return slot;
     }
@@ -182,7 +176,7 @@ public class HUD : MonoBehaviour
             if (h != null)
             {
                 healthFills[i].fillAmount = Mathf.Clamp01(h.HealthNormalized);
-                healthFills[i].color = h.IsDead ? Color.gray : SlotColors[i];
+                healthFills[i].color = h.IsDead ? Color.gray : playerColors.SlotColors[i];
             }
             else
             {
